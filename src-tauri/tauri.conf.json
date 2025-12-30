@@ -1,8 +1,8 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "seteuk",
+  "productName": "seteuk-ai",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.seteuk.ai",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "세특",
+        "title": "세특 AI",
         "width": 800,
         "height": 600,
         "resizable": true,
