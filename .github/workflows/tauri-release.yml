@@ -6,7 +6,7 @@ on:
       - "v*.*.*" # 예: v0.1.0
 
 permissions:
-  contents: write # 릴리즈 생성/에셋 업로드
+  contents: write
 
 jobs:
   build-windows:
@@ -20,34 +20,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # (선택) Rust 캐시로 빌드 속도 개선
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            apps/web/src-tauri -> target
 
-      # ✅ 모노레포/npm workspaces 기준: 루트에서 설치
-      - name: Install deps (root)
-        run: npm ci
+      # lockfile이 없으니 npm install 사용
+      - name: Install deps
+        run: npm install
 
-      # ✅ Tauri 빌드 (windows)
-      # - 너가 apps/web package.json에 tauri build 스크립트를 갖고 있다는 전제
-      - name: Build Tauri (web workspace)
-        run: npm run -w web tauri build
+      - name: Build Tauri
+        run: npm run tauri build
 
-      # ✅ GitHub Release 생성 + 산출물 업로드
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            apps/web/src-tauri/target/release/bundle/**/*.exe
-            apps/web/src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.exe
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
