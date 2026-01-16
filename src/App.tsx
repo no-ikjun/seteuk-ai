@@ -80,11 +80,11 @@ export default function App() {
   function onConfirmApiKey(inputKey: string) {
     const v = inputKey.trim();
     if (!v) {
-      setError("API Key를 입력해줘.");
+      setError("API Key를 입력해주세요.");
       return;
     }
     if (!v.startsWith("sk-")) {
-      setError("API Key는 sk- 로 시작해야 해.");
+      setError("API Key는 sk- 로 시작해야 합니다.");
       return;
     }
     setApiKey(v);
