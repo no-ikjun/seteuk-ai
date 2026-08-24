@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { parseFile, type Row } from "./lib/parseSheet";
 import { generateSeeteuk } from "./lib/api";
-import * as XLSX from "xlsx";
+import { exportResultsXlsx } from "./lib/exportSheet";
+import {
+  clampText,
+  inferColumnMapping,
+  joinActivity,
+  type ColumnMapping,
+} from "./lib/studentData";
+import { toErrorMessage } from "./lib/errors";
 
 type Project = {
   subject: string; // 1) 과목/영역
@@ -11,27 +18,6 @@ type Project = {
   format: string; // 4) 형식
   example: string; // 5) 예시 글
 };
-
-type ColumnMapping = {
-  displayKey: string; // 화면 표시용(서버 전송 안 함)
-  activityKeys: string[]; // 활동 텍스트로 합칠 컬럼들
-};
-
-function joinActivity(row: Row, keys: string[]) {
-  const parts = keys
-    .map((k) => {
-      const v = (row[k] ?? "").trim();
-      if (!v) return "";
-      return `${k}: ${v}`;
-    })
-    .filter(Boolean);
-  return parts.join("\n");
-}
-
-function clampText(s: string, max = 6000) {
-  if (s.length <= max) return s;
-  return s.slice(0, max) + "\n...(이하 생략: 입력이 너무 길어 일부만 전송됨)";
-}
 
 export default function App() {
   const [fileName, setFileName] = useState<string>("");
@@ -121,35 +107,24 @@ export default function App() {
 
   async function onUpload(file: File) {
     setError("");
-    setFileName(file.name);
+    try {
+      const parsed = await parseFile(file);
+      const keys = parsed.length > 0 ? Object.keys(parsed[0]) : [];
 
-    const parsed = await parseFile(file);
-    if (parsed.length === 0) {
-      setRows([]);
-      setCols([]);
-      setMapping({ displayKey: "", activityKeys: [] });
-      return;
+      setFileName(file.name);
+      setRows(parsed);
+      setCols(keys);
+      setMapping(inferColumnMapping(keys));
+      setIdx(0);
+      setExtraByIdx({});
+      setResultByIdx({});
+      setBatchDone(0);
+      setBatchTotal(0);
+      setBatchFailed(0);
+      cancelBatchRef.current = false;
+    } catch (uploadError) {
+      setError(`파일을 읽을 수 없습니다: ${toErrorMessage(uploadError)}`);
     }
-
-    const keys = Object.keys(parsed[0]);
-    setRows(parsed);
-    setCols(keys);
-
-    // 기본 매핑 추정
-    const guessDisplay =
-      keys.find((k) => /이름|성명|학생명|name/i.test(k)) ?? keys[0] ?? "";
-    const activityGuess = keys.filter(
-      (k) => !/이름|성명|학번|번호|id/i.test(k)
-    );
-
-    setMapping({
-      displayKey: guessDisplay,
-      activityKeys: activityGuess.length
-        ? activityGuess
-        : keys.slice(0, Math.min(3, keys.length)),
-    });
-
-    setIdx(0);
   }
 
   function toggleActivityKey(k: string) {
@@ -188,7 +163,7 @@ export default function App() {
     try {
       await onGenerateOne(idx);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
+      setError(toErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -202,61 +177,21 @@ export default function App() {
       // Tauri에서는 alert가 작동하지 않을 수 있으므로 에러 상태로 성공 표시
       setError(""); // 성공 시 에러 메시지 초기화
     } catch (e) {
-      setError("복사 실패: " + (e instanceof Error ? e.message : String(e)));
+      setError(`복사 실패: ${toErrorMessage(e)}`);
     }
   }
 
   function exportXLSX() {
     if (rows.length === 0) return;
 
-    const displayKey = mapping.displayKey;
-    const base = fileName ? fileName.replace(/\.[^.]+$/, "") : "seeteuk";
-    const outName = `${base}_seeteuk_results.xlsx`;
-
-    const sheetRows = rows.map((r, i) => {
-      const display = displayKey ? (r[displayKey] ?? "").trim() : `#${i + 1}`;
-      const extra = (extraByIdx[i] ?? "").trim();
-      const result = (resultByIdx[i] ?? "").trim();
-
-      return {
-        index: i + 1,
-        display,
-        extra_keywords: extra,
-        result,
-      };
+    exportResultsXlsx({
+      rows,
+      fileName,
+      displayKey: mapping.displayKey,
+      extraByIdx,
+      resultByIdx,
+      project,
     });
-
-    const generatedCount = Object.values(resultByIdx).filter(
-      (v) => (v ?? "").trim().length > 0
-    ).length;
-
-    const metaRows = [
-      { key: "subject", value: project.subject },
-      { key: "theme", value: project.theme },
-      { key: "avgLength", value: String(project.avgLength) },
-      { key: "format", value: project.format },
-      { key: "example", value: project.example },
-      { key: "sourceFile", value: fileName },
-      { key: "generatedCount", value: `${generatedCount}/${rows.length}` },
-    ];
-
-    const wb = XLSX.utils.book_new();
-
-    const ws1 = XLSX.utils.json_to_sheet(sheetRows, {
-      header: ["index", "display", "extra_keywords", "result"],
-    });
-
-    ws1["!cols"] = [{ wch: 8 }, { wch: 18 }, { wch: 30 }, { wch: 80 }];
-
-    const ws2 = XLSX.utils.json_to_sheet(metaRows, {
-      header: ["key", "value"],
-    });
-    ws2["!cols"] = [{ wch: 16 }, { wch: 90 }];
-
-    XLSX.utils.book_append_sheet(wb, ws1, "results");
-    XLSX.utils.book_append_sheet(wb, ws2, "project_meta");
-
-    XLSX.writeFile(wb, outName, { bookType: "xlsx" });
   }
 
   async function generateAll() {
@@ -442,6 +377,7 @@ export default function App() {
           <input
             type="file"
             accept=".xlsx,.xls,.csv"
+            disabled={batchRunning || loading}
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void onUpload(f);
