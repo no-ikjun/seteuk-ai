@@ -3,10 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
@@ -14,8 +19,6 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.1",
-    "@tauri-apps/plugin-store": "^2.4.1",
-    "@tauri-apps/plugin-stronghold": "^2.3.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "xlsx": "^0.18.5"
@@ -33,6 +36,7 @@
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^4.1.11"
   }
 }
