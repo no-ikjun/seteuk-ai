@@ -12,6 +12,23 @@ function readCargoVersion(path) {
   return version;
 }
 
+function readCargoLockPackageVersion(path, packageName) {
+  const cargoLock = fs.readFileSync(path, "utf8");
+  for (const section of cargoLock.split(/\n(?=\[\[package\]\]\n)/)) {
+    const name = section.match(/^name\s*=\s*"([^"]+)"$/m)?.[1];
+    if (name !== packageName) continue;
+    const version = section.match(/^version\s*=\s*"([^"]+)"$/m)?.[1];
+    if (version) return version;
+  }
+  throw new Error(`${path}에서 ${packageName} 패키지 버전을 찾을 수 없습니다.`);
+}
+
+function majorMinor(version) {
+  const match = version.match(/^(\d+)\.(\d+)\./);
+  if (!match) throw new Error(`SemVer 형식이 아닌 버전입니다: ${version}`);
+  return `${match[1]}.${match[2]}`;
+}
+
 function argument(name) {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : undefined;
@@ -34,6 +51,34 @@ if (uniqueVersions.size !== 1 || uniqueVersions.has(undefined)) {
     .map(([file, version]) => `${file}: ${version ?? "없음"}`)
     .join("\n");
   throw new Error(`릴리스 버전이 일치하지 않습니다.\n${details}`);
+}
+
+const tauriVersions = {
+  "package-lock.json @tauri-apps/api":
+    packageLock.packages?.["node_modules/@tauri-apps/api"]?.version,
+  "package-lock.json @tauri-apps/cli":
+    packageLock.packages?.["node_modules/@tauri-apps/cli"]?.version,
+  "src-tauri/Cargo.lock tauri": readCargoLockPackageVersion(
+    "src-tauri/Cargo.lock",
+    "tauri",
+  ),
+};
+
+if (Object.values(tauriVersions).some((value) => !value)) {
+  const details = Object.entries(tauriVersions)
+    .map(([source, value]) => `${source}: ${value ?? "없음"}`)
+    .join("\n");
+  throw new Error(`Tauri 버전을 확인할 수 없습니다.\n${details}`);
+}
+
+const tauriMinorVersions = new Set(
+  Object.values(tauriVersions).map(majorMinor),
+);
+if (tauriMinorVersions.size !== 1) {
+  const details = Object.entries(tauriVersions)
+    .map(([source, value]) => `${source}: ${value}`)
+    .join("\n");
+  throw new Error(`Tauri major/minor 버전이 일치하지 않습니다.\n${details}`);
 }
 
 const version = packageJson.version;
