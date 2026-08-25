@@ -6,6 +6,8 @@ a {
   -webkit-app-region: no-drag;
 }
 
+/* 기본 앱 창은 1100x760, 최소 폭은 900이다(src-tauri/tauri.conf.json).
+   반응형 분기점은 이 두 값을 기준으로 잡는다. */
 .wrap {
   max-width: 1100px;
   margin: 24px auto 60px;
@@ -104,7 +106,8 @@ h1 {
   margin: 14px 0;
 }
 
-@media (max-width: 900px) {
+/* 앱 최소 폭 미만(브라우저 실행 등)에서만 1단으로 내린다. */
+@media (max-width: 899px) {
   .grid {
     grid-template-columns: 1fr;
   }
@@ -394,11 +397,15 @@ h1 {
   background: rgba(180, 95, 6, 0.06);
 }
 
-@media (max-width: 900px) {
+/* .twoCol은 학생 목록 사이드바에 250px를 내주고 남은 폭을 다시 둘로 나눈다.
+   1024 미만에서는 각 열이 지나치게 좁아지므로 먼저 1단으로 내린다. */
+@media (max-width: 1023px) {
   .twoCol {
     grid-template-columns: 1fr;
   }
+}
 
+@media (max-width: 899px) {
   .studentWorkspace {
     grid-template-columns: 1fr;
   }
