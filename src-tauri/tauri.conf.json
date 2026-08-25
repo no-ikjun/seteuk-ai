@@ -1,8 +1,9 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "seteuk-ai",
+  "productName": "Seteuk AI",
+  "mainBinaryName": "seteuk-ai",
   "version": "0.1.0",
-  "identifier": "com.seteuk.ai",
+  "identifier": "io.github.no-ikjun.seteuk-ai",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -15,6 +16,8 @@
         "title": "세특 AI",
         "width": 800,
         "height": 600,
+        "minWidth": 720,
+        "minHeight": 600,
         "resizable": true,
         "fullscreen": false
       }
@@ -25,13 +28,37 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["app", "dmg"],
+    "category": "Education",
+    "copyright": "Copyright © 2026 Ikjun Choi",
+    "license": "MIT",
+    "licenseFile": "../LICENSE",
+    "shortDescription": "교사의 세특 초안 작성과 검토를 돕는 데스크톱 앱",
+    "longDescription": "학생 활동 기록을 바탕으로 교사가 검토하고 수정할 수 있는 교과 세부능력 및 특기사항 초안을 생성합니다.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "signingIdentity": "-",
+      "dmg": {
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        }
+      }
+    }
   }
 }

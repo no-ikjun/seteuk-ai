@@ -25,6 +25,15 @@ dist-ssr
 
 .env
 .env.local
+release.env
+
+# Apple signing and notarization material
+*.p12
+*.cer
+AuthKey_*.p8
+*.mobileprovision
+*.keychain-db
+certificate-base64.txt
 
 # Local development context (not published)
 docs/

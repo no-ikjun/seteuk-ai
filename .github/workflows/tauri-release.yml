@@ -1,46 +1,245 @@
-name: Release (Tauri Windows)
+name: Release Seteuk AI for macOS
 
 on:
   push:
     tags:
-      - "v*.*.*" # 예: v0.1.0
+      - "v*.*.*"
 
 permissions:
   contents: write
 
+concurrency:
+  group: macos-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  release-macos:
+    name: Sign, notarize, and publish Apple Silicon DMG
+    runs-on: macos-latest
+    environment: macos-release
+    timeout-minutes: 60
 
     steps:
-      - name: Checkout
+      - name: Checkout tagged source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
-      - name: Setup Rust
+      - name: Set up Rust target
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-
-      # lockfile이 없으니 npm install 사용
-      - name: Install deps
-        run: npm install
-
-      - name: Build Tauri
-        run: npm run tauri build
-
-      - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
-          files: |
-            src-tauri/target/release/bundle/**/*.exe
-            src-tauri/target/release/bundle/**/*.msi
-            src-tauri/target/release/bundle/**/*.zip
+          targets: aarch64-apple-darwin
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify tag and application versions
+        id: version
+        run: npm run release:verify -- --tag "$GITHUB_REF_NAME"
+
+      - name: Ensure signing material is not tracked
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '\.(p12|cer|p8|mobileprovision|keychain-db)$|certificate-base64\.txt$'; then
+            echo "Signing material must not be committed to the repository." >&2
+            exit 1
+          fi
+          private_key_marker='BEGIN PRIVATE'
+          private_key_marker+=' KEY'
+          certificate_marker='BEGIN CERT'
+          certificate_marker+='IFICATE'
+          if git grep -I -n -E "$private_key_marker|$certificate_marker" -- .; then
+            echo "A private key or certificate block appears to be tracked." >&2
+            exit 1
+          fi
+
+      - name: Run release checks
+        run: |
+          npm run lint
+          npm test
+          npm run build
+          cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+          cargo test --locked --manifest-path src-tauri/Cargo.toml
+          cargo check --locked --manifest-path src-tauri/Cargo.toml
+          npm audit --omit=dev --audit-level=high
+
+      - name: Validate release secrets
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PRIVATE: ${{ secrets.APPLE_API_KEY_PRIVATE }}
+        run: |
+          set -euo pipefail
+          required=(
+            APPLE_CERTIFICATE
+            APPLE_CERTIFICATE_PASSWORD
+            KEYCHAIN_PASSWORD
+            APPLE_API_ISSUER
+            APPLE_API_KEY
+            APPLE_API_KEY_PRIVATE
+          )
+          for name in "${required[@]}"; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Required macos-release secret is missing: $name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Import Developer ID certificate
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          certificate_path="$RUNNER_TEMP/developer-id.p12"
+          keychain_path="$RUNNER_TEMP/seteuk-release.keychain-db"
+
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate_path"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain_path"
+          security import "$certificate_path" \
+            -k "$keychain_path" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$keychain_path"
+          security list-keychains -d user -s "$keychain_path"
+
+          signing_identity="$(
+            security find-identity -v -p codesigning "$keychain_path" \
+              | sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p' \
+              | head -n 1
+          )"
+          if [[ -z "$signing_identity" ]]; then
+            echo "Developer ID Application identity was not found." >&2
+            exit 1
+          fi
+          echo "APPLE_SIGNING_IDENTITY=$signing_identity" >> "$GITHUB_ENV"
+
+      - name: Prepare App Store Connect API key
+        shell: bash
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PRIVATE: ${{ secrets.APPLE_API_KEY_PRIVATE }}
+        run: |
+          set -euo pipefail
+          api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY}.p8"
+          printf '%s' "$APPLE_API_KEY_PRIVATE" | base64 --decode > "$api_key_path"
+          chmod 600 "$api_key_path"
+          echo "APPLE_API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
+
+      - name: Build, sign, notarize, and staple
+        env:
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: >-
+          npm run tauri -- build
+          --bundles app,dmg
+          --target aarch64-apple-darwin
+
+      - name: Notarize and staple DMG
+        shell: bash
+        env:
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          set -euo pipefail
+          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Seteuk AI_${{ steps.version.outputs.version }}_aarch64.dmg"
+
+          test -f "$dmg_path"
+          xcrun notarytool submit "$dmg_path" \
+            --key "$APPLE_API_KEY_PATH" \
+            --key-id "$APPLE_API_KEY" \
+            --issuer "$APPLE_API_ISSUER" \
+            --wait
+          xcrun stapler staple "$dmg_path"
+
+      - name: Verify signed and notarized bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_root="src-tauri/target/aarch64-apple-darwin/release/bundle"
+          app_path="$bundle_root/macos/Seteuk AI.app"
+          dmg_path="$bundle_root/dmg/Seteuk AI_${{ steps.version.outputs.version }}_aarch64.dmg"
+
+          test -d "$app_path"
+          test -f "$dmg_path"
+          codesign --verify --deep --strict --verbose=2 "$app_path"
+          codesign -dv --verbose=4 "$app_path" 2>&1 \
+            | grep -F "Authority=Developer ID Application"
+          spctl --assess --type execute --verbose=4 "$app_path"
+          xcrun stapler validate "$app_path"
+          codesign --verify --verbose=2 "$dmg_path"
+          xcrun stapler validate "$dmg_path"
+
+          dmg_name="$(basename "$dmg_path")"
+          (
+            cd "$(dirname "$dmg_path")"
+            shasum -a 256 "$dmg_name" > "$dmg_name.sha256"
+          )
+          echo "DMG_PATH=$dmg_path" >> "$GITHUB_ENV"
+          echo "CHECKSUM_PATH=$dmg_path.sha256" >> "$GITHUB_ENV"
+
+      - name: Create or reuse draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft > "$RUNNER_TEMP/is-draft" 2>/dev/null; then
+            if [[ "$(cat "$RUNNER_TEMP/is-draft")" != "true" ]]; then
+              echo "A published release already exists for $GITHUB_REF_NAME." >&2
+              exit 1
+            fi
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --draft \
+              --verify-tag \
+              --generate-notes \
+              --title "Seteuk AI $VERSION" \
+              --notes "macOS 12 이상 Apple Silicon용 서명·공증 설치 이미지입니다."
+          fi
+
+      - name: Upload verified release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "$GITHUB_REF_NAME"
+          "$DMG_PATH"
+          "$CHECKSUM_PATH"
+          --clobber
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+
+      - name: Clean temporary keychain
+        if: always()
+        shell: bash
+        run: |
+          keychain_path="$RUNNER_TEMP/seteuk-release.keychain-db"
+          if [[ -f "$keychain_path" ]]; then
+            security delete-keychain "$keychain_path" || true
+          fi
+          rm -f \
+            "$RUNNER_TEMP/developer-id.p12" \
+            "$RUNNER_TEMP"/AuthKey_*.p8
