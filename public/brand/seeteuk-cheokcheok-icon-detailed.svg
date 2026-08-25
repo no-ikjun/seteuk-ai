@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">세특척척 상세 아이콘</title>
+  <desc id="desc">세 줄이 적힌 열린 기록장과 파란색, 민트색 체크 표시 두 개로 구성된 세특척척 아이콘</desc>
+
+  <defs>
+    <path
+      id="tapered-check"
+      d="M342 612
+         C378 614 413 640 440 670
+         C447 679 453 676 458 662
+         C510 558 628 348 734 274
+         C741 268 750 269 755 276
+         C760 283 758 291 750 298
+         C656 376 548 592 490 702
+         C478 720 458 728 439 722
+         C421 716 409 703 398 690
+         C380 669 360 654 338 646
+         C328 642 323 632 326 623
+         C329 616 335 612 342 612Z"
+    />
+  </defs>
+
+  <g transform="translate(-16 44)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Open record book: intentionally open on the right, matching the reference -->
+    <path
+      d="M806 104C686 102 588 118 512 226C412 118 282 82 144 90C108 92 88 116 88 152V696C88 733 109 754 146 752C292 740 418 766 512 846C568 796 628 770 698 768"
+      stroke="#062F62"
+      stroke-width="48"
+    />
+
+    <!-- Written record lines -->
+    <path d="M212 306H394M212 420H394M212 534H354" stroke="#062F62" stroke-width="36" />
+
+    <!-- Two flowing writing/check strokes: 척척. Filled outlines allow both tails to taper. -->
+    <use href="#tapered-check" fill="#1B68F5" stroke="none" />
+    <use href="#tapered-check" transform="translate(235 -2)" fill="#43C7B1" stroke="none" />
+  </g>
+</svg>
