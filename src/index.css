@@ -3,6 +3,7 @@
     "Noto Sans KR", sans-serif;
   color: #0b1b3a;
   background: #f6f8ff;
+  color-scheme: light dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,6 +25,14 @@ body {
   min-height: 100vh;
   margin: 0;
   background: #f6f8ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  body {
+    color: #e8edff;
+    background: #111827;
+  }
 }
 
 button,

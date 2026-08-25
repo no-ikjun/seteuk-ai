@@ -36,6 +36,56 @@ a {
   z-index: 10;
 }
 
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modalCard {
+  width: min(90%, 500px);
+  padding: 24px;
+}
+
+.modalDescription {
+  margin-bottom: 16px;
+}
+
+.modalError,
+.modalHint {
+  margin-top: 8px;
+}
+
+.modalActions {
+  margin-top: 16px;
+}
+
+.appError {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(192, 57, 43, 0.25);
+  border-radius: 10px;
+  background: rgba(192, 57, 43, 0.06);
+}
+
+.appNotice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(24, 130, 86, 0.25);
+  border-radius: 10px;
+  background: rgba(24, 130, 86, 0.08);
+}
+
+.notice {
+  color: #176b48;
+  font-weight: 800;
+  font-size: 13px;
+}
+
 h1 {
   margin: 0;
   font-size: 22px;
@@ -74,6 +124,19 @@ h1 {
   font-size: 16px;
 }
 
+.subheading {
+  margin: 18px 0 4px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(30, 60, 120, 0.12);
+  font-size: 14px;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 10px;
+}
+
 .label {
   display: block;
   margin: 10px 0 6px;
@@ -110,6 +173,11 @@ h1 {
 .gap {
   gap: 8px;
   margin-top: 10px;
+}
+
+.templateDownloads {
+  padding-top: 8px;
+  border-top: 1px solid rgba(30, 60, 120, 0.08);
 }
 
 .badge {
@@ -202,8 +270,146 @@ h1 {
   gap: 14px;
 }
 
+.actionBar {
+  margin-bottom: 12px;
+}
+
+.studentWorkspace {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.studentListPanel {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(30, 60, 120, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.studentFilters {
+  display: grid;
+  gap: 8px;
+}
+
+.selectAllRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 2px 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.studentList {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.studentListRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  padding: 4px;
+  border-radius: 9px;
+}
+
+.studentListRow.active {
+  background: rgba(10, 90, 255, 0.1);
+}
+
+.studentLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 5px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.studentLink > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(90, 107, 134, 0.1);
+  color: #5a6b86;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-success {
+  background: rgba(24, 130, 86, 0.12);
+  color: #176b48;
+}
+
+.status-failed {
+  background: rgba(192, 57, 43, 0.1);
+  color: #a92f24;
+}
+
+.status-generating {
+  background: rgba(10, 90, 255, 0.1);
+  color: #0a5ad4;
+}
+
+.studentEditor {
+  min-width: 0;
+}
+
+.textCount {
+  display: block;
+  margin-top: 5px;
+  text-align: right;
+}
+
+.editedBadge {
+  margin-left: 4px;
+  color: #176b48;
+}
+
+.emptyList {
+  padding: 8px;
+  text-align: center;
+}
+
+.privacyWarning {
+  padding: 9px 10px;
+  border: 1px solid rgba(180, 95, 6, 0.2);
+  border-radius: 10px;
+  background: rgba(180, 95, 6, 0.06);
+}
+
 @media (max-width: 900px) {
   .twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .studentWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .studentList {
+    max-height: 240px;
+  }
+}
+
+@media (max-width: 560px) {
+  .settingsGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -225,4 +431,58 @@ h1 {
 .foot {
   margin-top: 14px;
   text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: rgba(24, 34, 54, 0.88);
+    border-color: rgba(164, 184, 230, 0.22);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+  }
+
+  .input,
+  .select,
+  .textarea,
+  .btn,
+  .btn.small,
+  .pill {
+    color: #e8edff;
+    background: rgba(38, 50, 75, 0.95);
+    border-color: rgba(164, 184, 230, 0.3);
+  }
+
+  .studentListPanel {
+    background: rgba(17, 24, 39, 0.6);
+    border-color: rgba(164, 184, 230, 0.22);
+  }
+
+  .sub,
+  .muted,
+  .mutedSmall,
+  .status {
+    color: #b8c5e3;
+  }
+
+  .notice,
+  .status-success,
+  .editedBadge {
+    color: #72d7a8;
+  }
+
+  .error,
+  .status-failed {
+    color: #ff9d91;
+  }
+
+  .warn {
+    color: #ffc078;
+  }
+
+  .status-generating {
+    color: #8cbcff;
+  }
+
+  .modalBackdrop {
+    background: rgba(0, 0, 0, 0.68);
+  }
 }
