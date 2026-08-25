@@ -65,15 +65,19 @@ npm run tauri:dev
 `npm run dev`는 브라우저에서 UI만 확인하는 용도입니다. OpenAI 생성 기능은
 Tauri command를 사용하므로 `npm run tauri:dev`로 실행해야 합니다.
 
-프로덕션 앱 번들은 다음 명령으로 생성합니다.
+프로덕션 앱 번들은 대상 운영체제에서 다음 명령으로 생성합니다.
 
 ```bash
+# macOS
 npm run tauri:build:macos
+
+# Windows
+npm run tauri:build:windows
 ```
 
-현재 macOS 패키지는 macOS 12 이상 Apple Silicon Mac을 우선 지원합니다.
-설치 방법과 현재 배포 제약은 [macOS 설치 및 지원 안내](./MACOS.md)를
-참고하세요.
+현재 Windows 10/11 x64와 macOS 12 이상 Apple Silicon Mac을 지원합니다. 설치
+방법과 플랫폼별 보안 안내는 [Windows 설치 및 지원 안내](./WINDOWS.md)와
+[macOS 설치 및 지원 안내](./MACOS.md)를 참고하세요.
 
 ## 검증
 
@@ -119,6 +123,7 @@ OpenAI 요청에는 응답 저장 비활성화 옵션인 `store: false`를 명�
 
 ## 사용자 문서
 
+- [Windows 설치 및 지원 안내](./WINDOWS.md)
 - [macOS 설치 및 지원 안내](./MACOS.md)
 - [개인정보 처리 안내](./PRIVACY.md)
 - [라이선스](./LICENSE)

@@ -1,4 +1,4 @@
-name: Release Seteuk AI for macOS
+name: Release Seteuk AI for Windows and macOS
 
 on:
   push:
@@ -9,15 +9,16 @@ permissions:
   contents: write
 
 concurrency:
-  group: macos-release-${{ github.ref_name }}
+  group: desktop-release-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
-  release-macos:
-    name: Sign, notarize, and publish Apple Silicon DMG
+  validate:
+    name: Validate tagged source
     runs-on: macos-latest
-    environment: macos-release
-    timeout-minutes: 60
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout tagged source
@@ -31,10 +32,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Set up Rust target
+      - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin
+          components: rustfmt
 
       - name: Install locked dependencies
         run: npm ci
@@ -70,7 +71,91 @@ jobs:
           cargo check --locked --manifest-path src-tauri/Cargo.toml
           npm audit --omit=dev --audit-level=high
 
-      - name: Validate release secrets
+  build-windows:
+    name: Build Windows x64 installers
+    needs: validate
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build NSIS and MSI installers
+        run: npm run tauri -- build --bundles nsis,msi
+
+      - name: Collect and checksum Windows installers
+        shell: pwsh
+        run: |
+          $bundleRoot = Join-Path $PWD "src-tauri/target/release/bundle"
+          $installers = @(
+            Get-ChildItem (Join-Path $bundleRoot "nsis") -Filter *.exe -File -ErrorAction SilentlyContinue
+            Get-ChildItem (Join-Path $bundleRoot "msi") -Filter *.msi -File -ErrorAction SilentlyContinue
+          )
+          if ($installers.Count -ne 2) {
+            throw "Expected one NSIS installer and one MSI installer, found $($installers.Count)."
+          }
+
+          $assetDir = Join-Path $env:RUNNER_TEMP "windows-assets"
+          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
+          foreach ($installer in $installers) {
+            $destination = Join-Path $assetDir $installer.Name
+            Copy-Item $installer.FullName $destination
+            $hash = (Get-FileHash -Algorithm SHA256 -Path $destination).Hash.ToLowerInvariant()
+            $checksum = "$hash  $($installer.Name)`n"
+            [System.IO.File]::WriteAllText(
+              "$destination.sha256",
+              $checksum,
+              [System.Text.UTF8Encoding]::new($false)
+            )
+          }
+
+      - name: Upload Windows release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-x64
+          path: ${{ runner.temp }}/windows-assets/*
+          if-no-files-found: error
+          retention-days: 7
+
+  build-macos:
+    name: Build signed and notarized macOS Apple Silicon DMG
+    needs: validate
+    runs-on: macos-latest
+    environment: macos-release
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Rust target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Validate macOS release secrets
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -145,7 +230,7 @@ jobs:
           chmod 600 "$api_key_path"
           echo "APPLE_API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
 
-      - name: Build, sign, notarize, and staple
+      - name: Build, sign, notarize, and staple app
         env:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
@@ -161,7 +246,7 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
           set -euo pipefail
-          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Seteuk AI_${{ steps.version.outputs.version }}_aarch64.dmg"
+          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Seteuk AI_${{ needs.validate.outputs.version }}_aarch64.dmg"
 
           test -f "$dmg_path"
           xcrun notarytool submit "$dmg_path" \
@@ -171,13 +256,13 @@ jobs:
             --wait
           xcrun stapler staple "$dmg_path"
 
-      - name: Verify signed and notarized bundles
+      - name: Verify and checksum macOS bundles
         shell: bash
         run: |
           set -euo pipefail
           bundle_root="src-tauri/target/aarch64-apple-darwin/release/bundle"
           app_path="$bundle_root/macos/Seteuk AI.app"
-          dmg_path="$bundle_root/dmg/Seteuk AI_${{ steps.version.outputs.version }}_aarch64.dmg"
+          dmg_path="$bundle_root/dmg/Seteuk AI_${{ needs.validate.outputs.version }}_aarch64.dmg"
 
           test -d "$app_path"
           test -f "$dmg_path"
@@ -188,20 +273,83 @@ jobs:
           xcrun stapler validate "$app_path"
           codesign --verify --verbose=2 "$dmg_path"
           xcrun stapler validate "$dmg_path"
+          hdiutil verify "$dmg_path"
 
+          asset_dir="$RUNNER_TEMP/macos-assets"
+          mkdir -p "$asset_dir"
+          cp "$dmg_path" "$asset_dir/"
           dmg_name="$(basename "$dmg_path")"
           (
-            cd "$(dirname "$dmg_path")"
+            cd "$asset_dir"
             shasum -a 256 "$dmg_name" > "$dmg_name.sha256"
           )
-          echo "DMG_PATH=$dmg_path" >> "$GITHUB_ENV"
-          echo "CHECKSUM_PATH=$dmg_path.sha256" >> "$GITHUB_ENV"
+
+      - name: Upload macOS release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos-apple-silicon
+          path: ${{ runner.temp }}/macos-assets/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Clean temporary signing material
+        if: always()
+        shell: bash
+        run: |
+          keychain_path="$RUNNER_TEMP/seteuk-release.keychain-db"
+          if [[ -f "$keychain_path" ]]; then
+            security delete-keychain "$keychain_path" || true
+          fi
+          rm -f \
+            "$RUNNER_TEMP/developer-id.p12" \
+            "$RUNNER_TEMP"/AuthKey_*.p8
+
+  publish-release:
+    name: Publish combined desktop release
+    needs:
+      - validate
+      - build-windows
+      - build-macos
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ needs.validate.outputs.version }}
+
+    steps:
+      - name: Download verified release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Verify combined asset set
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          dmg=(release-assets/*.dmg)
+          exe=(release-assets/*.exe)
+          msi=(release-assets/*.msi)
+          checksums=(release-assets/*.sha256)
+
+          if (( ${#dmg[@]} != 1 || ${#exe[@]} != 1 || ${#msi[@]} != 1 || ${#checksums[@]} != 3 )); then
+            echo "Expected one DMG, one EXE, one MSI, and three checksum files." >&2
+            find release-assets -maxdepth 1 -type f -print >&2
+            exit 1
+          fi
+
+          (
+            cd release-assets
+            for checksum in *.sha256; do
+              shasum -a 256 -c "$checksum"
+            done
+          )
 
       - name: Create or reuse draft release
         shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
           if gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft > "$RUNNER_TEMP/is-draft" 2>/dev/null; then
@@ -215,31 +363,15 @@ jobs:
               --verify-tag \
               --generate-notes \
               --title "Seteuk AI $VERSION" \
-              --notes "macOS 12 이상 Apple Silicon용 서명·공증 설치 이미지입니다."
+              --notes "Windows 10/11 x64 설치 파일과 macOS 12 이상 Apple Silicon용 서명·공증 DMG입니다. 각 파일의 SHA-256 체크섬을 함께 제공합니다."
           fi
 
       - name: Upload verified release assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh release upload "$GITHUB_REF_NAME"
-          "$DMG_PATH"
-          "$CHECKSUM_PATH"
-          --clobber
-
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release edit "$GITHUB_REF_NAME" --draft=false --latest
-
-      - name: Clean temporary keychain
-        if: always()
         shell: bash
         run: |
-          keychain_path="$RUNNER_TEMP/seteuk-release.keychain-db"
-          if [[ -f "$keychain_path" ]]; then
-            security delete-keychain "$keychain_path" || true
-          fi
-          rm -f \
-            "$RUNNER_TEMP/developer-id.p12" \
-            "$RUNNER_TEMP"/AuthKey_*.p8
+          set -euo pipefail
+          mapfile -d '' assets < <(find release-assets -maxdepth 1 -type f -print0)
+          gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
+
+      - name: Publish release
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false --latest

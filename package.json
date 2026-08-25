@@ -1,7 +1,7 @@
 {
   "name": "seteuk-ai",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "교사의 세특 초안 작성과 검토를 돕는 Tauri 데스크톱 앱",
   "author": "Ikjun Choi",
   "license": "MIT",
@@ -21,6 +21,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:build:macos": "tauri build --bundles app,dmg",
+    "tauri:build:windows": "tauri build --bundles nsis,msi",
     "release:verify": "node scripts/verify-release.mjs"
   },
   "dependencies": {

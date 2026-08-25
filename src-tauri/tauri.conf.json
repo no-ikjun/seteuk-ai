@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Seteuk AI",
   "mainBinaryName": "seteuk-ai",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "identifier": "io.github.no-ikjun.seteuk-ai",
   "build": {
     "frontendDist": "../dist",
@@ -28,7 +28,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg"],
+    "targets": "all",
     "category": "Education",
     "copyright": "Copyright © 2026 Ikjun Choi",
     "license": "MIT",
