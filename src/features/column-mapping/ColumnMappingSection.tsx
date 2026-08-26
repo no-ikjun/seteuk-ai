@@ -2,6 +2,7 @@ import {
   isIdentifierColumn,
   type ColumnMapping,
 } from "../../domain/student/StudentRecord";
+import { SelectField } from "../../shared/forms/SelectField";
 import { AlertIcon } from "../../shared/icons";
 
 type ColumnMappingSectionProps = {
@@ -30,8 +31,7 @@ export function ColumnMappingSection({
       ) : (
         <>
           <label className="label">학생 표시용 컬럼(AI 전송 제외)</label>
-          <select
-            className="select"
+          <SelectField
             value={mapping.displayKey}
             disabled={disabled}
             onChange={(event) => onDisplayChange(event.target.value)}
@@ -41,7 +41,7 @@ export function ColumnMappingSection({
                 {column}
               </option>
             ))}
-          </select>
+          </SelectField>
 
           <label className="label">활동 텍스트로 합칠 컬럼(복수 선택)</label>
           <div className="pillBox">

@@ -1,4 +1,5 @@
 import type { GenerationSettings } from "../../domain/generation/Generation";
+import { SelectField } from "../../shared/forms/SelectField";
 import { ChevronDownIcon } from "../../shared/icons";
 
 type AdvancedSettingsSectionProps = {
@@ -27,15 +28,14 @@ export function AdvancedSettingsSection({
       <div className="settingsGrid">
         <label>
           <span className="label">OpenAI 모델</span>
-          <select
-            className="select"
+          <SelectField
             value={generationSettings.model}
             disabled={disabled}
             onChange={(event) => onChange("model", event.target.value)}
           >
             <option value="gpt-4o">gpt-4o</option>
             <option value="gpt-4o-mini">gpt-4o-mini</option>
-          </select>
+          </SelectField>
         </label>
         <label>
           <span className="label">요청 제한 시간(초)</span>

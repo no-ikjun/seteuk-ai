@@ -508,6 +508,42 @@ h1 {
   outline: none;
 }
 
+/* 한 줄짜리 컨트롤은 높이를 맞춘다. 여러 줄인 textarea는 대상이 아니다. */
+.input,
+.select {
+  min-height: var(--control-height);
+}
+
+/* WebKit(Tauri의 macOS 웹뷰)은 appearance가 기본값인 select의 height와
+   min-height를 무시한다. UA 렌더링을 꺼야 높이를 제어할 수 있다.
+   화살표는 SelectField가 아이콘으로 다시 그린다. */
+.selectField {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  /* 화살표가 앉을 자리를 비워 둔다. */
+  padding-right: var(--space-2xl);
+}
+
+.selectChevron {
+  position: absolute;
+  top: 50%;
+  right: var(--space-md);
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  /* 화살표를 눌러도 select가 열려야 한다. */
+  pointer-events: none;
+}
+
+.selectField:has(.select:disabled) .selectChevron {
+  opacity: 0.5;
+}
+
 .textarea {
   resize: vertical;
   line-height: var(--leading-relaxed);

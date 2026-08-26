@@ -50,6 +50,12 @@
     Roboto, "Noto Sans KR", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
+  /* 입력 컨트롤의 최소 높이.
+     native select는 UA가 line-height를 normal로 고정해 같은 padding에도
+     input보다 낮게 그려진다(macOS 기준 41px 대 43px). 두 컨트롤이 나란히
+     놓이는 자리가 많아 높이를 토큰 하나로 맞춘다. */
+  --control-height: 44px;
+
   /* 모서리. 로고가 라운드 캡 굵은 획이라 값이 큰 쪽을 기본으로 쓴다. */
   --radius-sm: 8px;
   --radius-md: 12px;
