@@ -1,12 +1,50 @@
 import { describe, expect, it } from "vitest";
 import {
+  activityEntries,
   clampText,
   createStudentRecords,
+  getStudentStage,
   inferColumnMapping,
   joinActivity,
+  type StudentRecord,
 } from "./StudentRecord";
 
 describe("StudentRecord", () => {
+  it("생성 결과와 검토 여부를 합쳐 화면 단계를 만든다", () => {
+    const [student] = createStudentRecords([{ 이름: "홍길동" }], "session-a");
+    const withStage = (patch: Partial<StudentRecord>) =>
+      getStudentStage({ ...student, ...patch });
+
+    expect(withStage({})).toBe("idle");
+    expect(withStage({ status: "generating" })).toBe("generating");
+    expect(withStage({ status: "failed" })).toBe("failed");
+    // 같은 success라도 검토 여부에 따라 단계가 갈린다.
+    expect(withStage({ status: "success", reviewed: false })).toBe("draft");
+    expect(withStage({ status: "success", reviewed: true })).toBe("reviewed");
+  });
+
+
+  it("화면에 보여줄 활동 항목과 전송 문자열이 같은 값에서 나온다", () => {
+    const row = {
+      이름: "홍길동",
+      활동1: " 수학 발표 주도 ",
+      활동2: "",
+      활동3: "보고서 작성",
+    };
+    const keys = ["활동1", "활동2", "활동3"];
+
+    expect(activityEntries(row, keys)).toEqual([
+      { key: "활동1", value: "수학 발표 주도" },
+      { key: "활동3", value: "보고서 작성" },
+    ]);
+
+    // 값이 빈 컬럼은 양쪽 모두에서 빠진다.
+    expect(joinActivity(row, keys)).toBe(
+      activityEntries(row, keys)
+        .map((entry) => `${entry.key}: ${entry.value}`)
+        .join("\n"),
+    );
+  });
   it("세션과 원본 행 번호로 안정적인 학생 ID를 만든다", () => {
     const students = createStudentRecords(
       [{ 이름: "홍길동" }, { 이름: "김영희" }],

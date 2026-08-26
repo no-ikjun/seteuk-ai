@@ -31,6 +31,9 @@ export type AppState = {
   batch: BatchState;
   error: string;
   notice: string;
+  /* 알림이 새로 뜰 때마다 늘어난다. 같은 문구가 다시 떠도 자동 사라짐
+     타이머를 새로 걸 수 있게 하려는 값이다. */
+  noticeId: number;
 };
 
 export const INITIAL_APP_STATE: AppState = {
@@ -50,6 +53,7 @@ export const INITIAL_APP_STATE: AppState = {
   },
   error: "",
   notice: "",
+  noticeId: 0,
 };
 
 export type AppAction =
@@ -73,6 +77,7 @@ export type AppAction =
   | { type: "studentSelectionChanged"; studentId: string; selected: boolean }
   | { type: "allStudentsSelectionChanged"; selected: boolean }
   | { type: "resultChanged"; studentId: string; value: string }
+  | { type: "reviewToggled"; studentId: string; reviewed: boolean }
   | { type: "generationStarted"; studentId: string }
   | {
       type: "generationSucceeded";
@@ -195,6 +200,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           result: action.value,
         })),
       };
+    case "reviewToggled":
+      return {
+        ...state,
+        students: updateStudent(state.students, action.studentId, (student) =>
+          /* 결과가 없는 학생은 검토할 것도 없다. */
+          student.result.trim()
+            ? { ...student, reviewed: action.reviewed }
+            : student,
+        ),
+      };
     case "generationStarted":
       return {
         ...state,
@@ -215,6 +230,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
                 generatedResult: action.text,
                 result: action.text,
                 status: "success",
+                /* 초안이 통째로 바뀌었으므로 검토는 처음부터 다시 한다. */
+                reviewed: false,
                 retryCount: Math.max(0, action.attempts - 1),
                 error: undefined,
               }
@@ -268,7 +285,11 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "errorChanged":
       return { ...state, error: action.error };
     case "noticeChanged":
-      return { ...state, notice: action.notice };
+      return {
+        ...state,
+        notice: action.notice,
+        noticeId: state.noticeId + 1,
+      };
   }
 }
 
@@ -280,14 +301,22 @@ export function selectGeneratedCount(state: AppState) {
   return state.students.filter((student) => student.result.trim()).length;
 }
 
+export function selectReviewedCount(state: AppState) {
+  return state.students.filter(
+    (student) => student.reviewed && student.result.trim(),
+  ).length;
+}
+
 export function selectIsGenerating(state: AppState) {
   return state.students.some((student) => student.status === "generating");
 }
 
-export function selectCanGenerate(state: AppState, apiKey: string) {
+/* API Key를 뺀 생성 준비 상태.
+   키가 없어도 생성 버튼을 눌러 키 입력으로 이어질 수 있어야 하므로
+   화면의 활성/비활성 판단은 이 값을 쓴다. */
+export function selectIsGenerationReady(state: AppState) {
   return Boolean(
-    apiKey &&
-      selectCurrentStudent(state) &&
+    selectCurrentStudent(state) &&
       isProjectValid(state.project) &&
       state.mapping.activityKeys.length > 0 &&
       state.generationSettings.model.trim() &&
@@ -295,4 +324,9 @@ export function selectCanGenerate(state: AppState, apiKey: string) {
       state.generationSettings.maxRetries >= 0 &&
       state.generationSettings.batchDelayMs >= 0,
   );
+}
+
+/* 실제로 요청을 보낼 수 있는지. 키까지 갖춰졌을 때만 참이다. */
+export function selectCanGenerate(state: AppState, apiKey: string) {
+  return Boolean(apiKey) && selectIsGenerationReady(state);
 }

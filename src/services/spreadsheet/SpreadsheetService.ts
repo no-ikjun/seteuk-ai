@@ -24,4 +24,7 @@ export type StarterWorkbookKind = "blank" | "sample";
 
 export interface SpreadsheetTemplateExporter {
   exportStarterWorkbook(kind: StarterWorkbookKind): void;
+  /* 파일을 거치지 않고 바로 불러올 예시 학생 행.
+     시작 화면의 `예시로 둘러보기`가 쓴다. */
+  sampleRows(): SourceRow[];
 }

@@ -19,6 +19,59 @@ function loadedState(): AppState {
 }
 
 describe("appReducer", () => {
+  it("초안을 다시 생성하면 검토 완료 표시가 풀린다", () => {
+    const base = loadedState();
+    const studentId = base.students[0].id;
+    const generated = appReducer(
+      appReducer(base, { type: "generationStarted", studentId }),
+      { type: "generationSucceeded", studentId, text: "첫 초안", attempts: 1 },
+    );
+    const reviewed = appReducer(generated, {
+      type: "reviewToggled",
+      studentId,
+      reviewed: true,
+    });
+    expect(reviewed.students[0].reviewed).toBe(true);
+
+    // 초안이 통째로 바뀌었으므로 검토는 처음부터 다시 해야 한다.
+    const regenerated = appReducer(
+      appReducer(reviewed, { type: "generationStarted", studentId }),
+      { type: "generationSucceeded", studentId, text: "두 번째 초안", attempts: 1 },
+    );
+
+    expect(regenerated.students[0].result).toBe("두 번째 초안");
+    expect(regenerated.students[0].reviewed).toBe(false);
+  });
+
+  it("결과가 없는 학생은 검토 완료로 표시되지 않는다", () => {
+    const base = loadedState();
+    const studentId = base.students[0].id;
+
+    const next = appReducer(base, {
+      type: "reviewToggled",
+      studentId,
+      reviewed: true,
+    });
+
+    expect(next.students[0].reviewed).toBe(false);
+  });
+
+  it("같은 알림이 다시 떠도 noticeId가 올라간다", () => {
+    // 자동 사라짐 타이머는 문구가 아니라 noticeId를 보고 다시 걸린다.
+    // 문구만 보면 같은 알림이 연달아 뜰 때 타이머가 갱신되지 않는다.
+    const first = appReducer(INITIAL_APP_STATE, {
+      type: "noticeChanged",
+      notice: "복사했습니다.",
+    });
+    const second = appReducer(first, {
+      type: "noticeChanged",
+      notice: "복사했습니다.",
+    });
+
+    expect(second.notice).toBe(first.notice);
+    expect(second.noticeId).toBeGreaterThan(first.noticeId);
+  });
+
   it("새 파일 로드는 이전 학생 상태와 일괄 진행 상태를 한 번에 초기화한다", () => {
     const previous: AppState = {
       ...loadedState(),

@@ -162,6 +162,11 @@ export function buildStarterWorkbook(kind: StarterWorkbookKind) {
 export class XlsxSpreadsheetTemplateExporter
   implements SpreadsheetTemplateExporter
 {
+  /* 호출한 쪽이 값을 고쳐도 원본이 흔들리지 않게 복사해서 준다. */
+  sampleRows(): SourceRow[] {
+    return SAMPLE_ROWS.map((row) => ({ ...row }));
+  }
+
   exportStarterWorkbook(kind: StarterWorkbookKind) {
     const { workbook, outputFileName } = buildStarterWorkbook(kind);
     XLSX.writeFile(workbook, outputFileName, { bookType: "xlsx" });
