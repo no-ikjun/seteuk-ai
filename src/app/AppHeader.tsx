@@ -42,7 +42,7 @@ export function AppHeader({
               API Key 입력됨
             </span>
             <button
-              className="btn small"
+              className="btn"
               type="button"
               disabled={disabled}
               onClick={onOpenApiKey}
@@ -52,18 +52,18 @@ export function AppHeader({
           </>
         ) : (
           <button
-            className="btn small"
+            className="btn"
             type="button"
             disabled={disabled}
             onClick={onOpenApiKey}
           >
-            <KeyIcon size={14} />
+            <KeyIcon />
             API Key 입력
           </button>
         )}
         {hasFile && (
           <button
-            className="btn"
+            className="btn accent"
             type="button"
             disabled={disabled}
             onClick={onExport}
