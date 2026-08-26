@@ -12,7 +12,7 @@ export function AppHeader({
   return (
     <header className="header">
       <div className="headerLeft" data-tauri-drag-region>
-        <h1>세특 자동 작성기 (로컬)</h1>
+        <h1>세특척척</h1>
         <p className="sub">
           엑셀 업로드 → 프로젝트 입력(5항목) → 학생별/일괄 생성 → 엑셀(.xlsx)
           저장

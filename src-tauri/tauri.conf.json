@@ -1,7 +1,7 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Seteuk AI",
-  "mainBinaryName": "seteuk-ai",
+  "productName": "Seteuk Cheokcheok",
+  "mainBinaryName": "seteuk-cheokcheok",
   "version": "0.2.2",
   "identifier": "io.github.no-ikjun.seteuk-ai",
   "build": {
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "세특 AI",
+        "title": "세특척척",
         "width": 1100,
         "height": 760,
         "minWidth": 900,

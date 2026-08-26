@@ -154,8 +154,8 @@ export function buildStarterWorkbook(kind: StarterWorkbookKind) {
     workbook,
     outputFileName:
       kind === "sample"
-        ? "세특AI_예시_데이터.xlsx"
-        : "세특AI_학생활동_빈_양식.xlsx",
+        ? "세특척척_예시_데이터.xlsx"
+        : "세특척척_학생활동_빈_양식.xlsx",
   };
 }
 

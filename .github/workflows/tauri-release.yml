@@ -1,4 +1,4 @@
-name: Release Seteuk AI for Windows and macOS
+name: Release Seteuk Cheokcheok for Windows and macOS
 
 on:
   push:
@@ -246,7 +246,7 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
           set -euo pipefail
-          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Seteuk AI_${{ needs.validate.outputs.version }}_aarch64.dmg"
+          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Seteuk Cheokcheok_${{ needs.validate.outputs.version }}_aarch64.dmg"
 
           test -f "$dmg_path"
           xcrun notarytool submit "$dmg_path" \
@@ -261,8 +261,8 @@ jobs:
         run: |
           set -euo pipefail
           bundle_root="src-tauri/target/aarch64-apple-darwin/release/bundle"
-          app_path="$bundle_root/macos/Seteuk AI.app"
-          dmg_path="$bundle_root/dmg/Seteuk AI_${{ needs.validate.outputs.version }}_aarch64.dmg"
+          app_path="$bundle_root/macos/Seteuk Cheokcheok.app"
+          dmg_path="$bundle_root/dmg/Seteuk Cheokcheok_${{ needs.validate.outputs.version }}_aarch64.dmg"
 
           test -d "$app_path"
           test -f "$dmg_path"
@@ -362,7 +362,7 @@ jobs:
               --draft \
               --verify-tag \
               --generate-notes \
-              --title "Seteuk AI $VERSION" \
+              --title "세특척척 $VERSION" \
               --notes "Windows 10/11 x64 설치 파일과 macOS 12 이상 Apple Silicon용 서명·공증 DMG입니다. 각 파일의 SHA-256 체크섬을 함께 제공합니다."
           fi
 

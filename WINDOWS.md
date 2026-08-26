@@ -31,8 +31,8 @@ Get-FileHash ".\다운로드한-설치파일.exe" -Algorithm SHA256
 ## 설치
 
 1. 다운로드한 `.exe` 또는 `.msi` 설치 파일을 실행합니다.
-2. 설치 화면의 안내에 따라 Seteuk AI를 설치합니다.
-3. 시작 메뉴 또는 바탕 화면에서 `Seteuk AI`를 실행합니다.
+2. 설치 화면의 안내에 따라 세특척척을 설치합니다.
+3. 시작 메뉴 또는 바탕 화면에서 `Seteuk Cheokcheok`를 실행합니다.
 4. 앱이 요청하면 본인의 OpenAI API Key를 입력합니다.
 
 현재 Windows 설치 파일에는 Authenticode 코드 서명이 적용되지 않아 Windows
@@ -54,7 +54,7 @@ GitHub Releases에서 받은 파일인지와 SHA-256 체크섬을 확인하고, 
 
 ## 삭제
 
-`설정 → 앱 → 설치된 앱`에서 `Seteuk AI`를 찾아 제거합니다. 앱은 별도의 계정이나
+`설정 → 앱 → 설치된 앱`에서 `Seteuk Cheokcheok`를 찾아 제거합니다. 앱은 별도의 계정이나
 자체 서버 저장소를 만들지 않습니다.
 
 ## 문제가 발생할 때

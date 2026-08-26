@@ -181,7 +181,7 @@ describe("buildStarterWorkbook", () => {
   it("빈 양식에 입력 헤더와 별도 작성안내 시트를 제공한다", () => {
     const { workbook, outputFileName } = buildStarterWorkbook("blank");
 
-    expect(outputFileName).toBe("세특AI_학생활동_빈_양식.xlsx");
+    expect(outputFileName).toBe("세특척척_학생활동_빈_양식.xlsx");
     expect(workbook.SheetNames).toEqual(["학생활동", "작성안내"]);
     expect(
       XLSX.utils.sheet_to_json<string[]>(workbook.Sheets["학생활동"], {
@@ -207,7 +207,7 @@ describe("buildStarterWorkbook", () => {
     const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const file = new File([bytes], outputFileName);
 
-    expect(outputFileName).toBe("세특AI_예시_데이터.xlsx");
+    expect(outputFileName).toBe("세특척척_예시_데이터.xlsx");
     expect(rows).toHaveLength(3);
     expect(rows.map((row) => row.이름)).toEqual(["학생A", "학생B", "학생C"]);
     await expect(new XlsxSpreadsheetReader().read(file)).resolves.toEqual(rows);
