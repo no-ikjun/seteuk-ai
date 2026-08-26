@@ -1,13 +1,147 @@
+/* 디자인 토큰.
+   색·간격·radius·그림자는 이 파일에서만 정의하고 App.css는 var()로 참조한다.
+   다크 모드는 선택자를 다시 덮어쓰지 않고 아래 미디어 쿼리에서 토큰 값만
+   교체한다. 새 색을 App.css에 직접 쓰지 말고 여기에 토큰을 추가한다. */
 :root {
+  color-scheme: light dark;
+
+  /* 간격 */
+  --space-4xs: 2px;
+  --space-3xs: 4px;
+  --space-2xs: 6px;
+  --space-xs: 8px;
+  --space-sm: 10px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+
+  /* 타이포그래피 */
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 22px;
+
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* 한글 본문은 라틴 문자보다 넉넉한 행간이 필요하다. */
+  --leading-tight: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* 모서리 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* 표면 */
+  --surface-page: #f6f8ff;
+  --surface-card: rgba(255, 255, 255, 0.7);
+  --surface-raised: rgba(255, 255, 255, 0.85);
+  --surface-field: rgba(255, 255, 255, 0.9);
+  --surface-sunken: rgba(255, 255, 255, 0.45);
+  --surface-overlay: rgba(0, 0, 0, 0.5);
+
+  /* 테두리 */
+  --border-subtle: rgba(30, 60, 120, 0.08);
+  --border-default: rgba(30, 60, 120, 0.12);
+  --border-strong: rgba(30, 60, 120, 0.18);
+
+  /* 텍스트 */
+  --text-primary: #0b1b3a;
+  --text-secondary: #4a5a78;
+  --text-muted: #5a6b86;
+
+  /* 강조 */
+  --accent-text: #0a5ad4;
+  --accent-surface-weak: rgba(10, 90, 255, 0.08);
+  --accent-surface: rgba(10, 90, 255, 0.1);
+  --accent-surface-strong: rgba(10, 90, 255, 0.12);
+  --accent-border-weak: rgba(10, 90, 255, 0.18);
+  --accent-border: rgba(10, 90, 255, 0.35);
+
+  /* 상태 */
+  --success-text: #176b48;
+  --success-surface: rgba(24, 130, 86, 0.08);
+  --success-surface-strong: rgba(24, 130, 86, 0.12);
+  --success-border: rgba(24, 130, 86, 0.25);
+
+  --danger-text: #c0392b;
+  --danger-text-strong: #a92f24;
+  --danger-surface: rgba(192, 57, 43, 0.06);
+  --danger-surface-strong: rgba(192, 57, 43, 0.1);
+  --danger-border: rgba(192, 57, 43, 0.25);
+
+  --warning-text: #b45f06;
+  --warning-surface: rgba(180, 95, 6, 0.06);
+  --warning-border: rgba(180, 95, 6, 0.2);
+
+  --neutral-surface: rgba(90, 107, 134, 0.1);
+
+  /* 그 외 */
+  --shadow-card: 0 12px 24px rgba(20, 40, 90, 0.05);
+  --focus-ring: #175cd3;
+
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Noto Sans KR", sans-serif;
-  color: #0b1b3a;
-  background: #f6f8ff;
-  color-scheme: light dark;
+  color: var(--text-primary);
+  background: var(--surface-page);
+  line-height: var(--leading-normal);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-page: #111827;
+    --surface-card: rgba(24, 34, 54, 0.88);
+    --surface-raised: rgba(38, 50, 75, 0.95);
+    --surface-field: rgba(38, 50, 75, 0.95);
+    --surface-sunken: rgba(17, 24, 39, 0.6);
+    --surface-overlay: rgba(0, 0, 0, 0.68);
+
+    --border-subtle: rgba(164, 184, 230, 0.16);
+    --border-default: rgba(164, 184, 230, 0.22);
+    --border-strong: rgba(164, 184, 230, 0.3);
+
+    --text-primary: #e8edff;
+    --text-secondary: #b8c5e3;
+    --text-muted: #b8c5e3;
+
+    /* 어두운 표면 위에서는 같은 알파로 강조가 보이지 않아 값을 올린다. */
+    --accent-text: #8cbcff;
+    --accent-surface-weak: rgba(120, 170, 255, 0.14);
+    --accent-surface: rgba(120, 170, 255, 0.18);
+    --accent-surface-strong: rgba(120, 170, 255, 0.22);
+    --accent-border-weak: rgba(140, 188, 255, 0.3);
+    --accent-border: rgba(140, 188, 255, 0.5);
+
+    --success-text: #72d7a8;
+    --success-surface: rgba(56, 200, 140, 0.12);
+    --success-surface-strong: rgba(56, 200, 140, 0.18);
+    --success-border: rgba(56, 200, 140, 0.32);
+
+    --danger-text: #ff9d91;
+    --danger-text-strong: #ff9d91;
+    --danger-surface: rgba(255, 120, 105, 0.1);
+    --danger-surface-strong: rgba(255, 120, 105, 0.16);
+    --danger-border: rgba(255, 120, 105, 0.3);
+
+    --warning-text: #ffc078;
+    --warning-surface: rgba(255, 176, 80, 0.1);
+    --warning-border: rgba(255, 176, 80, 0.28);
+
+    --neutral-surface: rgba(184, 197, 227, 0.12);
+
+    --shadow-card: 0 12px 24px rgba(0, 0, 0, 0.24);
+    --focus-ring: #8cbcff;
+  }
 }
 
 * {
@@ -24,15 +158,7 @@ body,
 body {
   min-height: 100vh;
   margin: 0;
-  background: #f6f8ff;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root,
-  body {
-    color: #e8edff;
-    background: #111827;
-  }
+  background: var(--surface-page);
 }
 
 button,
@@ -47,6 +173,6 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #175cd3;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
