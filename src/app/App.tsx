@@ -1,9 +1,7 @@
 import "../App.css";
 import { ApiKeyModal } from "../features/api-key/ApiKeyModal";
 import { useApiKey } from "../features/api-key/useApiKey";
-import { ColumnMappingSection } from "../features/column-mapping/ColumnMappingSection";
 import { FileImportSection } from "../features/file-import/FileImportSection";
-import { ProjectSettingsSection } from "../features/project-settings/ProjectSettingsSection";
 import { ExportConfirmationModal } from "../features/result-export/ExportConfirmationModal";
 import { StudentGenerationSection } from "../features/student-generation/StudentGenerationSection";
 import { SendConfirmationModal } from "../features/student-generation/SendConfirmationModal";
@@ -13,7 +11,10 @@ import {
   XlsxSpreadsheetReader,
   XlsxSpreadsheetTemplateExporter,
 } from "../services/spreadsheet/XlsxSpreadsheetService";
+import { useShortcuts } from "../shared/keyboard/useShortcuts";
 import { AppHeader } from "./AppHeader";
+import { ToastStack } from "./ToastStack";
+import { SettingsPanel } from "./SettingsPanel";
 import { useSeeteukApp } from "./useSeeteukApp";
 
 const generationService = new TauriGenerationService();
@@ -25,6 +26,7 @@ export default function App() {
   const apiKey = useApiKey();
   const app = useSeeteukApp({
     apiKey: apiKey.apiKey,
+    onApiKeyRequired: apiKey.openForGeneration,
     generationService,
     spreadsheetReader,
     spreadsheetExporter,
@@ -33,16 +35,40 @@ export default function App() {
   const busy = app.isGenerating || app.state.batch.running;
   const hasFile = app.state.students.length > 0;
 
+  /* 학생 ID는 `<파일 세션 ID>:<행 번호>` 형식이라 파일을 새로 열 때마다
+     달라진다. 이 값을 key로 주면 설정 영역이 다시 마운트되면서 펼친
+     상태로 시작한다. */
+  const fileSessionKey = app.state.students[0]?.id ?? "";
+
+  /* 모달이 떠 있는 동안에는 단축키를 받지 않는다. 뒤에 가려진 화면이
+     조용히 움직이면 안 된다. */
+  const modalOpen =
+    apiKey.isOpen ||
+    app.pendingGeneration !== null ||
+    app.pendingExport !== null;
+  const shortcutsEnabled = hasFile && !modalOpen;
+
+  /* 내보내기는 헤더가 갖고 있으므로 여기서 단축키를 건다. 나머지 단축키는
+     대상이 학생 작업 영역 안에 있어 그쪽에서 처리한다. */
+  useShortcuts(
+    [{ key: "s", mod: true, run: app.exportResults }],
+    shortcutsEnabled && !busy,
+  );
+
   return (
-    <div className="wrap">
+    <div className={hasFile ? "app appShell" : "app"}>
       {apiKey.isOpen && (
         <ApiKeyModal
           input={apiKey.input}
           error={apiKey.error}
-          hasApiKey={Boolean(apiKey.apiKey)}
+          prompt={apiKey.prompt}
           onInputChange={apiKey.setInput}
           onConfirm={apiKey.confirm}
-          onClose={apiKey.close}
+          onClose={() => {
+            /* 키 입력을 그만두면 미뤄 둔 생성 요청도 함께 버린다. */
+            app.cancelPendingApiKeyRequest();
+            apiKey.close();
+          }}
         />
       )}
 
@@ -55,9 +81,10 @@ export default function App() {
         />
       )}
 
-      {app.pendingExportCount !== null && (
+      {app.pendingExport !== null && (
         <ExportConfirmationModal
-          incompleteCount={app.pendingExportCount}
+          incompleteCount={app.pendingExport.incomplete}
+          unreviewedCount={app.pendingExport.unreviewed}
           onConfirm={app.confirmExport}
           onCancel={app.cancelExportConfirmation}
         />
@@ -65,86 +92,91 @@ export default function App() {
 
       <AppHeader
         hasApiKey={Boolean(apiKey.apiKey)}
+        hasFile={hasFile}
         disabled={busy}
-        onChangeApiKey={apiKey.open}
+        onOpenApiKey={apiKey.open}
+        onExport={app.exportResults}
       />
 
-      {app.state.error && <p className="error appError">{app.state.error}</p>}
-      {app.state.notice && (
-        <p className="notice appNotice" role="status">
-          {app.state.notice}
-        </p>
-      )}
-
-      <FileImportSection
-        fileName={app.state.fileName}
-        studentCount={app.state.students.length}
-        columnCount={app.state.columns.length}
-        generatedCount={app.generatedCount}
-        disabled={busy}
-        onUpload={(file) => void app.upload(file)}
-        onDownloadBlankTemplate={() => app.downloadStarterWorkbook("blank")}
-        onDownloadSample={() => app.downloadStarterWorkbook("sample")}
+      <ToastStack
+        notice={app.state.notice}
+        error={app.state.error}
+        onDismissNotice={app.dismissNotice}
+        onDismissError={app.dismissError}
       />
 
-      {hasFile && (
-        <>
-          <section className="grid">
-            <ProjectSettingsSection
+      <main className="appMain">
+        {hasFile ? (
+          <>
+            <SettingsPanel
+              key={fileSessionKey}
+              fileName={app.state.fileName}
+              studentCount={app.state.students.length}
+              columnCount={app.state.columns.length}
+              generatedCount={app.generatedCount}
+              columns={app.state.columns}
               project={app.state.project}
               generationSettings={app.state.generationSettings}
-              disabled={busy}
-              onChange={app.changeProject}
-              onGenerationSettingChange={app.changeGenerationSetting}
-            />
-            <ColumnMappingSection
-              columns={app.state.columns}
               mapping={app.state.mapping}
               disabled={busy}
+              onUpload={(file) => void app.upload(file)}
+              onDownloadBlankTemplate={() =>
+                app.downloadStarterWorkbook("blank")
+              }
+              onDownloadSample={() => app.downloadStarterWorkbook("sample")}
+              onProjectChange={app.changeProject}
+              onGenerationSettingChange={app.changeGenerationSetting}
               onDisplayChange={app.changeDisplayColumn}
               onActivityToggle={app.toggleActivityColumn}
             />
-          </section>
 
-          <StudentGenerationSection
-            students={app.state.students}
-            currentIndex={app.state.currentIndex}
-            currentDisplay={app.currentDisplay}
-            currentActivityText={app.currentActivityText}
-            extraKeywords={app.currentStudent?.extraKeywords ?? ""}
-            generatedResult={app.currentStudent?.generatedResult ?? ""}
-            result={app.currentStudent?.result ?? ""}
-            studentStatus={app.currentStudent?.status}
-            studentRetryCount={app.currentStudent?.retryCount ?? 0}
-            studentError={app.currentStudent?.error}
-            mapping={app.state.mapping}
-            batch={app.state.batch}
-            canGenerate={app.canGenerate}
-            isGenerating={app.isGenerating}
-            selectedCount={app.selectedCount}
-            failedCount={app.failedCount}
-            onPrevious={() => app.goToIndex(app.state.currentIndex - 1)}
-            onNext={() => app.goToIndex(app.state.currentIndex + 1)}
-            onGoToIndex={app.goToIndex}
-            onSelectionChange={app.changeStudentSelection}
-            onExtraKeywordsChange={app.changeExtraKeywords}
-            onResultChange={app.changeCurrentResult}
-            onGenerateCurrent={() => app.requestGeneration("current")}
-            onGenerateAll={() => app.requestGeneration("all")}
-            onGenerateSelected={() => app.requestGeneration("selected")}
-            onRetryFailed={() => app.requestGeneration("failed")}
-            onCancelBatch={app.cancelBatch}
-            onCopyResult={() => void app.copyCurrentResult()}
-            onExport={app.exportResults}
+            <StudentGenerationSection
+              students={app.state.students}
+              currentIndex={app.state.currentIndex}
+              currentDisplay={app.currentDisplay}
+              activityEntries={app.currentActivityEntries}
+              activityText={app.currentActivityText}
+              activityClamped={app.currentActivityClamped}
+              extraKeywords={app.currentStudent?.extraKeywords ?? ""}
+              generatedResult={app.currentStudent?.generatedResult ?? ""}
+              result={app.currentStudent?.result ?? ""}
+              targetLength={app.state.project.avgLength}
+              currentStudent={app.currentStudent}
+              reviewed={app.currentStudent?.reviewed ?? false}
+              shortcutsEnabled={shortcutsEnabled}
+              studentRetryCount={app.currentStudent?.retryCount ?? 0}
+              studentError={app.currentStudent?.error}
+              mapping={app.state.mapping}
+              batch={app.state.batch}
+              canGenerate={app.canGenerate}
+              isGenerating={app.isGenerating}
+              selectedCount={app.selectedCount}
+              failedCount={app.failedCount}
+              onPrevious={() => app.goToIndex(app.state.currentIndex - 1)}
+              onNext={() => app.goToIndex(app.state.currentIndex + 1)}
+              onGoToIndex={app.goToIndex}
+              onSelectionChange={app.changeStudentSelection}
+              onExtraKeywordsChange={app.changeExtraKeywords}
+              onResultChange={app.changeCurrentResult}
+              onReviewedChange={app.changeReviewed}
+              onGenerateCurrent={() => app.requestGeneration("current")}
+              onGenerateAll={() => app.requestGeneration("all")}
+              onGenerateSelected={() => app.requestGeneration("selected")}
+              onRetryFailed={() => app.requestGeneration("failed")}
+              onCancelBatch={app.cancelBatch}
+              onCopyResult={() => void app.copyCurrentResult()}
+            />
+          </>
+        ) : (
+          <FileImportSection
+            disabled={busy}
+            onUpload={(file) => void app.upload(file)}
+            onLoadSample={app.loadSampleData}
+            onDownloadBlankTemplate={() => app.downloadStarterWorkbook("blank")}
+            onDownloadSample={() => app.downloadStarterWorkbook("sample")}
           />
-
-          <footer className="foot">
-            <span className="mutedSmall">
-              ⚠️ 권장: 이름/학번 등 식별정보 컬럼은 “활동 컬럼”에서 제외할 것.
-            </span>
-          </footer>
-        </>
-      )}
+        )}
+      </main>
     </div>
   );
 }

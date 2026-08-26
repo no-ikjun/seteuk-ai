@@ -1,10 +1,16 @@
 import { useState } from "react";
 
+/* 모달이 열린 까닭. 생성을 누르다 열린 경우에는 왜 필요한지 알려준다. */
+export type ApiKeyPrompt = "manual" | "generation";
+
 export function useApiKey() {
   const [apiKey, setApiKey] = useState("");
   const [input, setInputValue] = useState("");
   const [error, setError] = useState("");
-  const [isOpen, setIsOpen] = useState(true);
+  /* 앱을 켜자마자 묻지 않는다. 파일을 열고 설정을 확인하는 데는 키가
+     필요 없으므로, 실제로 필요한 시점(생성 요청)까지 미룬다. */
+  const [isOpen, setIsOpen] = useState(false);
+  const [prompt, setPrompt] = useState<ApiKeyPrompt>("manual");
 
   function setInput(value: string) {
     setInputValue(value);
@@ -27,18 +33,28 @@ export function useApiKey() {
     setError("");
   }
 
-  function open() {
+  function openWith(nextPrompt: ApiKeyPrompt) {
     setInputValue("");
     setError("");
+    setPrompt(nextPrompt);
     setIsOpen(true);
   }
 
-  function close() {
-    if (!apiKey) return;
-    setInputValue("");
-    setError("");
-    setIsOpen(false);
-  }
-
-  return { apiKey, input, error, isOpen, setInput, confirm, open, close };
+  return {
+    apiKey,
+    input,
+    error,
+    isOpen,
+    prompt,
+    setInput,
+    confirm,
+    open: () => openWith("manual"),
+    openForGeneration: () => openWith("generation"),
+    /* 키가 없어도 앱을 계속 쓸 수 있으므로 언제나 닫을 수 있다. */
+    close: () => {
+      setInputValue("");
+      setError("");
+      setIsOpen(false);
+    },
+  };
 }
