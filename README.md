@@ -76,8 +76,8 @@ npm run tauri:build:windows
 ```
 
 현재 Windows 10/11 x64와 macOS 12 이상 Apple Silicon Mac을 지원합니다. 설치
-방법과 플랫폼별 보안 안내는 [Windows 설치 및 지원 안내](./WINDOWS.md)와
-[macOS 설치 및 지원 안내](./MACOS.md)를 참고하세요.
+방법과 플랫폼별 보안 안내는 [Windows 설치 및 지원 안내](./policy/WINDOWS.md)와
+[macOS 설치 및 지원 안내](./policy/MACOS.md)를 참고하세요.
 
 ## 검증
 
@@ -119,13 +119,13 @@ API Key는 실행 중인 앱의 메모리에만 유지되며 파일로 저장되
 
 OpenAI 요청에는 응답 저장 비활성화 옵션인 `store: false`를 명시합니다. OpenAI 측의 별도 보안·오남용 모니터링 및 데이터 처리에는 사용하는 API 계정과 OpenAI 정책이 적용됩니다.
 
-자세한 내용은 [개인정보 처리 안내](./PRIVACY.md)를 참고하세요.
+자세한 내용은 [개인정보 처리 안내](./policy/PRIVACY.md)를 참고하세요.
 
 ## 사용자 문서
 
-- [Windows 설치 및 지원 안내](./WINDOWS.md)
-- [macOS 설치 및 지원 안내](./MACOS.md)
-- [개인정보 처리 안내](./PRIVACY.md)
+- [Windows 설치 및 지원 안내](./policy/WINDOWS.md)
+- [macOS 설치 및 지원 안내](./policy/MACOS.md)
+- [개인정보 처리 안내](./policy/PRIVACY.md)
 - [라이선스](./LICENSE)
 
 ## 사용 전 확인
