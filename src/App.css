@@ -107,6 +107,7 @@ h1 {
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-items: start;
   gap: var(--space-lg);
   margin: var(--space-lg) 0;
 }
@@ -253,6 +254,9 @@ h1 {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border-strong);
   background: var(--surface-raised);
   border-radius: var(--radius-md);
@@ -262,9 +266,17 @@ h1 {
   font-weight: var(--weight-semibold);
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn[data-disabled] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 파일 입력을 감싼 label은 입력 자체가 화면에서 숨겨져 있어
+   포커스 링을 label에 그린다. */
+.btn:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .btn.primary {
@@ -451,4 +463,92 @@ h1 {
 .foot {
   margin-top: var(--space-lg);
   text-align: center;
+}
+
+/* 화면에서만 숨기고 포커스는 유지한다. 파일 입력을 감싼 라벨에서 쓴다. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.uploadZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3xs);
+  padding: var(--space-xl) var(--space-lg);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-field);
+  cursor: pointer;
+  text-align: center;
+}
+
+.uploadZone:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-surface-weak);
+}
+
+.uploadZone:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.uploadZone[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.uploadZoneTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.fileSummary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-field);
+}
+
+.fileSummaryName {
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSummarySpacer {
+  flex: 1;
+}
+
+.batchProgress {
+  display: grid;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-md);
+}
+
+.batchProgressTrack {
+  height: var(--space-2xs);
+  border-radius: var(--radius-pill);
+  background: var(--accent-surface);
+  overflow: hidden;
+}
+
+.batchProgressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent-text);
+  transition: width 120ms linear;
 }

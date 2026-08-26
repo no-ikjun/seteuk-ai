@@ -31,6 +31,7 @@ export default function App() {
     spreadsheetTemplateExporter,
   });
   const busy = app.isGenerating || app.state.batch.running;
+  const hasFile = app.state.students.length > 0;
 
   return (
     <div className="wrap">
@@ -86,60 +87,64 @@ export default function App() {
         onDownloadSample={() => app.downloadStarterWorkbook("sample")}
       />
 
-      <section className="grid">
-        <ProjectSettingsSection
-          project={app.state.project}
-          generationSettings={app.state.generationSettings}
-          disabled={busy}
-          onChange={app.changeProject}
-          onGenerationSettingChange={app.changeGenerationSetting}
-        />
-        <ColumnMappingSection
-          columns={app.state.columns}
-          mapping={app.state.mapping}
-          disabled={busy}
-          onDisplayChange={app.changeDisplayColumn}
-          onActivityToggle={app.toggleActivityColumn}
-        />
-      </section>
+      {hasFile && (
+        <>
+          <section className="grid">
+            <ProjectSettingsSection
+              project={app.state.project}
+              generationSettings={app.state.generationSettings}
+              disabled={busy}
+              onChange={app.changeProject}
+              onGenerationSettingChange={app.changeGenerationSetting}
+            />
+            <ColumnMappingSection
+              columns={app.state.columns}
+              mapping={app.state.mapping}
+              disabled={busy}
+              onDisplayChange={app.changeDisplayColumn}
+              onActivityToggle={app.toggleActivityColumn}
+            />
+          </section>
 
-      <StudentGenerationSection
-        students={app.state.students}
-        currentIndex={app.state.currentIndex}
-        currentDisplay={app.currentDisplay}
-        currentActivityText={app.currentActivityText}
-        extraKeywords={app.currentStudent?.extraKeywords ?? ""}
-        generatedResult={app.currentStudent?.generatedResult ?? ""}
-        result={app.currentStudent?.result ?? ""}
-        studentStatus={app.currentStudent?.status}
-        studentRetryCount={app.currentStudent?.retryCount ?? 0}
-        studentError={app.currentStudent?.error}
-        mapping={app.state.mapping}
-        batch={app.state.batch}
-        canGenerate={app.canGenerate}
-        isGenerating={app.isGenerating}
-        selectedCount={app.selectedCount}
-        failedCount={app.failedCount}
-        onPrevious={() => app.goToIndex(app.state.currentIndex - 1)}
-        onNext={() => app.goToIndex(app.state.currentIndex + 1)}
-        onGoToIndex={app.goToIndex}
-        onSelectionChange={app.changeStudentSelection}
-        onExtraKeywordsChange={app.changeExtraKeywords}
-        onResultChange={app.changeCurrentResult}
-        onGenerateCurrent={() => app.requestGeneration("current")}
-        onGenerateAll={() => app.requestGeneration("all")}
-        onGenerateSelected={() => app.requestGeneration("selected")}
-        onRetryFailed={() => app.requestGeneration("failed")}
-        onCancelBatch={app.cancelBatch}
-        onCopyResult={() => void app.copyCurrentResult()}
-        onExport={app.exportResults}
-      />
+          <StudentGenerationSection
+            students={app.state.students}
+            currentIndex={app.state.currentIndex}
+            currentDisplay={app.currentDisplay}
+            currentActivityText={app.currentActivityText}
+            extraKeywords={app.currentStudent?.extraKeywords ?? ""}
+            generatedResult={app.currentStudent?.generatedResult ?? ""}
+            result={app.currentStudent?.result ?? ""}
+            studentStatus={app.currentStudent?.status}
+            studentRetryCount={app.currentStudent?.retryCount ?? 0}
+            studentError={app.currentStudent?.error}
+            mapping={app.state.mapping}
+            batch={app.state.batch}
+            canGenerate={app.canGenerate}
+            isGenerating={app.isGenerating}
+            selectedCount={app.selectedCount}
+            failedCount={app.failedCount}
+            onPrevious={() => app.goToIndex(app.state.currentIndex - 1)}
+            onNext={() => app.goToIndex(app.state.currentIndex + 1)}
+            onGoToIndex={app.goToIndex}
+            onSelectionChange={app.changeStudentSelection}
+            onExtraKeywordsChange={app.changeExtraKeywords}
+            onResultChange={app.changeCurrentResult}
+            onGenerateCurrent={() => app.requestGeneration("current")}
+            onGenerateAll={() => app.requestGeneration("all")}
+            onGenerateSelected={() => app.requestGeneration("selected")}
+            onRetryFailed={() => app.requestGeneration("failed")}
+            onCancelBatch={app.cancelBatch}
+            onCopyResult={() => void app.copyCurrentResult()}
+            onExport={app.exportResults}
+          />
 
-      <footer className="foot">
-        <span className="mutedSmall">
-          ⚠️ 권장: 이름/학번 등 식별정보 컬럼은 “활동 컬럼”에서 제외할 것.
-        </span>
-      </footer>
+          <footer className="foot">
+            <span className="mutedSmall">
+              ⚠️ 권장: 이름/학번 등 식별정보 컬럼은 “활동 컬럼”에서 제외할 것.
+            </span>
+          </footer>
+        </>
+      )}
     </div>
   );
 }

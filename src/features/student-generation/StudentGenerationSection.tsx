@@ -154,8 +154,29 @@ export function StudentGenerationSection({
                 일괄 생성 중단
               </button>
             )}
-            {progressText && <span className="badge">{progressText}</span>}
           </div>
+
+          {batch.total > 0 && (
+            <div className="batchProgress">
+              <div
+                className="batchProgressTrack"
+                role="progressbar"
+                aria-label="일괄 생성 진행률"
+                aria-valuemin={0}
+                aria-valuemax={batch.total}
+                aria-valuenow={batch.done}
+                aria-valuetext={progressText}
+              >
+                <div
+                  className="batchProgressFill"
+                  style={{
+                    width: `${Math.round((batch.done / batch.total) * 100)}%`,
+                  }}
+                />
+              </div>
+              <span className="mutedSmall">{progressText}</span>
+            </div>
+          )}
 
           <div className="studentWorkspace">
             <aside className="studentListPanel" aria-label="학생 목록">

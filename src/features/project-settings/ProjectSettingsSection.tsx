@@ -21,9 +21,9 @@ export function ProjectSettingsSection({
 }: ProjectSettingsSectionProps) {
   return (
     <div className="card">
-      <h2>2. 프로젝트 입력 (교사 입력 5가지)</h2>
+      <h2>2. 작성 조건</h2>
 
-      <label className="label">1. 과목/영역</label>
+      <label className="label">과목/영역</label>
       <input
         className="input"
         value={project.subject}
@@ -31,7 +31,7 @@ export function ProjectSettingsSection({
         onChange={(event) => onChange("subject", event.target.value)}
       />
 
-      <label className="label">2. 주제</label>
+      <label className="label">주제</label>
       <input
         className="input"
         value={project.theme}
@@ -39,7 +39,7 @@ export function ProjectSettingsSection({
         onChange={(event) => onChange("theme", event.target.value)}
       />
 
-      <label className="label">3. 평균 분량(자)</label>
+      <label className="label">평균 분량(자)</label>
       <input
         className="input"
         type="number"
@@ -50,7 +50,7 @@ export function ProjectSettingsSection({
         onChange={(event) => onChange("avgLength", Number(event.target.value))}
       />
 
-      <label className="label">4. 형식</label>
+      <label className="label">형식</label>
       <textarea
         className="textarea"
         rows={4}
@@ -59,7 +59,7 @@ export function ProjectSettingsSection({
         onChange={(event) => onChange("format", event.target.value)}
       />
 
-      <label className="label">5. 예시 글</label>
+      <label className="label">예시 글</label>
       <textarea
         className="textarea"
         rows={6}
