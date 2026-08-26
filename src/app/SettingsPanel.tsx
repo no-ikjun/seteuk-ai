@@ -77,10 +77,18 @@ export function SettingsPanel({
 
   return (
     <section className="settingsPanel" aria-label="작성 설정">
-      <div className="settingsBar">
-        <p className="settingsSummary" title={summary}>
+      {/* 줄 전체가 여닫는 버튼이다. 버튼 안에는 phrasing content만 들어갈 수
+          있어 요약은 <p>가 아니라 <span>으로 둔다. */}
+      <button
+        className="settingsBar"
+        type="button"
+        aria-expanded={open}
+        aria-controls="settings-body"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className="settingsSummary" title={summary}>
           {summary}
-        </p>
+        </span>
 
         {identifierColumns.length > 0 && (
           <span className="settingsWarnChip">
@@ -89,20 +97,16 @@ export function SettingsPanel({
           </span>
         )}
 
-        <button
-          className="btn small settingsToggle"
-          type="button"
-          aria-expanded={open}
-          aria-controls="settings-body"
-          onClick={() => setOpen((value) => !value)}
-        >
+        {/* 줄 전체가 버튼이지만, 쉬고 있을 때도 여닫을 수 있다는 것이 보여야
+            한다. 글자로 동작을 직접 말하고 테두리로 조작 대상임을 알린다. */}
+        <span className="settingsToggle">
+          {open ? "설정 접기" : "설정 펼치기"}
           <ChevronDownIcon
             size={14}
             className={open ? "settingsChevron open" : "settingsChevron"}
           />
-          설정
-        </button>
-      </div>
+        </span>
+      </button>
 
       {open && (
         <div className="settingsBody" id="settings-body">
