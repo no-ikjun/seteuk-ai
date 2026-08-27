@@ -69,7 +69,10 @@ jobs:
           cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
           cargo test --locked --manifest-path src-tauri/Cargo.toml
           cargo check --locked --manifest-path src-tauri/Cargo.toml
-          npm audit --omit=dev --audit-level=high
+          # 검사 범위는 '앱에 실려 나가는 것'이다. devDependencies와
+          # optionalDependencies는 빌드 도구라 사용자 기기에서 실행되지 않는다.
+          # (optional에는 macOS DMG를 만드는 appdmg가 들어 있다.)
+          npm audit --omit=dev --omit=optional --audit-level=high
 
   build-windows:
     name: Build Windows x64 installers
