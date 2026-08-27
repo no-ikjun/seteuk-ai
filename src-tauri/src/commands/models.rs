@@ -13,7 +13,7 @@ pub(crate) struct ModelDto {
 }
 
 /* 모델 목록은 생성과 같은 오류 형태를 쓴다. 화면에서 인증·한도·네트워크
-   오류를 구분해 안내하는 코드를 그대로 재사용할 수 있다. */
+오류를 구분해 안내하는 코드를 그대로 재사용할 수 있다. */
 #[tauri::command]
 pub(crate) async fn list_models(api_key: String) -> Result<Vec<ModelDto>, GenerateErrorDto> {
     let models = openai::catalog::list_models(&api_key)

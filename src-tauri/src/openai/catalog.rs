@@ -11,9 +11,9 @@ use crate::{
 use super::client::{classify_api_error, classify_transport_error, validate_api_key};
 
 /* 텍스트 생성이 아닌 모델을 걸러 낸다. 세특 초안은 Responses API의 텍스트
-   출력만 사용하므로 임베딩·음성·이미지 계열은 목록에 올리지 않는다.
-   OpenAI가 새 이름을 붙여도 목록에서 사라지지만 않도록, 차단 목록은
-   좁게 두고 허용 조건을 우선한다. */
+출력만 사용하므로 임베딩·음성·이미지 계열은 목록에 올리지 않는다.
+OpenAI가 새 이름을 붙여도 목록에서 사라지지만 않도록, 차단 목록은
+좁게 두고 허용 조건을 우선한다. */
 const EXCLUDED_MARKERS: &[&str] = &[
     "embedding",
     "tts",
@@ -78,8 +78,8 @@ fn parse_models(json: &serde_json::Value) -> Vec<ModelInfo> {
 }
 
 /* 계정이 실제로 쓸 수 있는 모델만 돌려준다. 화면에 고정 목록을 두면
-   새 모델이 나올 때마다 앱을 새로 배포해야 하고, 반대로 권한이 없는
-   모델을 고르면 생성 단계에 가서야 실패한다. */
+새 모델이 나올 때마다 앱을 새로 배포해야 하고, 반대로 권한이 없는
+모델을 고르면 생성 단계에 가서야 실패한다. */
 pub(crate) async fn list_models(api_key: &str) -> AppResult<Vec<ModelInfo>> {
     validate_api_key(api_key)?;
 
