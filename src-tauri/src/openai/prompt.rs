@@ -122,8 +122,8 @@ fn extra_prohibitions(level: SchoolLevel, record: RecordType) -> &'static str {
 }
 
 /* 나이스는 입력을 Byte로 세지만(한글 1자 = 3Byte) 모델에게 Byte를 말하면
-   가늠하지 못한다. 세는 단위는 Byte로 두고, 지시는 한글 자 수로 바꿔 준다.
-   내림으로 바꿔 환산 과정에서 한도를 넘지 않게 한다. */
+가늠하지 못한다. 세는 단위는 Byte로 두고, 지시는 한글 자 수로 바꿔 준다.
+내림으로 바꿔 환산 과정에서 한도를 넘지 않게 한다. */
 fn target_chars(target_bytes: i32) -> i32 {
     (target_bytes / 3).max(1)
 }
@@ -193,9 +193,9 @@ pub(super) fn build_prompt(project: &Project, student: &Student) -> String {
 }
 
 /* 분량만 맞추는 재요청.
-   새로 쓰라고 하면 교사가 고쳐 둔 표현이 사라지고 기록에 없는 내용이 다시
-   섞일 수 있다. 그래서 '문장을 다시 쓰라'가 아니라 '있는 내용 안에서 분량만
-   맞추라'고 지시하고, 금지 사항은 그대로 다시 실어 준다. */
+새로 쓰라고 하면 교사가 고쳐 둔 표현이 사라지고 기록에 없는 내용이 다시
+섞일 수 있다. 그래서 '문장을 다시 쓰라'가 아니라 '있는 내용 안에서 분량만
+맞추라'고 지시하고, 금지 사항은 그대로 다시 실어 준다. */
 pub(super) fn build_revise_prompt(body: &ReviseRequest) -> String {
     let level = body.school_level;
     let record = body.record_type;

@@ -168,7 +168,7 @@ impl From<ReviseRequestDto> for ReviseRequest {
 }
 
 /* 분량만 맞추는 재요청. 학생 활동 기록을 다시 보내지 않으므로 개인정보가
-   추가로 나가지 않는다. */
+추가로 나가지 않는다. */
 #[tauri::command]
 pub(crate) async fn revise_length(
     api_key: String,

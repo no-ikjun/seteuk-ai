@@ -164,8 +164,8 @@ pub(crate) async fn generate(
 }
 
 /* 분량을 맞추는 재요청. 학생 기록을 다시 보내지 않고 이미 만들어진 문장만
-   줄이거나 늘린다. 교사가 이미 고쳐 둔 내용을 살리면서 분량만 맞출 수 있고,
-   보내는 양이 적어 비용도 낮다. */
+줄이거나 늘린다. 교사가 이미 고쳐 둔 내용을 살리면서 분량만 맞출 수 있고,
+보내는 양이 적어 비용도 낮다. */
 pub(crate) async fn revise_length(
     api_key: &str,
     body: &ReviseRequest,
@@ -174,7 +174,7 @@ pub(crate) async fn revise_length(
 }
 
 /* 생성과 재요청이 함께 쓰는 요청 경로. 타임아웃·재시도·오류 구분이 두 곳으로
-   갈라지면 한쪽만 고쳐지는 일이 생긴다. */
+갈라지면 한쪽만 고쳐지는 일이 생긴다. */
 async fn request_text(
     api_key: &str,
     settings: &GenerationSettings,

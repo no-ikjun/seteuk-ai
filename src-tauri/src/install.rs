@@ -244,14 +244,10 @@ mod tests {
 
     #[test]
     fn 실행_파일_경로에서_앱_번들을_찾는다() {
-        let exe = Path::new(
-            "/Volumes/세특척척/세특척척.app/Contents/MacOS/seteuk-cheokcheok",
-        );
+        let exe = Path::new("/Volumes/세특척척/세특척척.app/Contents/MacOS/seteuk-cheokcheok");
         assert_eq!(
             bundle_path_from_exe(exe),
-            Some(PathBuf::from(
-                "/Volumes/세특척척/세특척척.app"
-            )),
+            Some(PathBuf::from("/Volumes/세특척척/세특척척.app")),
         );
         // .app 안이 아니면 대상이 아니다.
         assert_eq!(bundle_path_from_exe(Path::new("/usr/local/bin/tool")), None);
@@ -260,16 +256,11 @@ mod tests {
     #[test]
     fn 볼륨_루트만_인정한다() {
         assert_eq!(
-            volume_root(Path::new(
-                "/Volumes/세특척척/세특척척.app"
-            )),
+            volume_root(Path::new("/Volumes/세특척척/세특척척.app")),
             Some(PathBuf::from("/Volumes/세특척척")),
         );
         // Applications에서 실행 중이면 옮길 이유가 없다.
-        assert_eq!(
-            volume_root(Path::new("/Applications/세특척척.app")),
-            None
-        );
+        assert_eq!(volume_root(Path::new("/Applications/세특척척.app")), None);
     }
 
     #[test]
