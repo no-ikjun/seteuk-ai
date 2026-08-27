@@ -102,7 +102,16 @@ fs.writeFileSync(specPath, JSON.stringify(spec, null, 2));
 // 이 저장소는 npm 워크스페이스라 appdmg가 루트 node_modules로 호이스팅된다.
 // node_modules/.bin 경로를 직접 쓰면 위치에 따라 어긋나므로 패키지에서 푼다.
 const require = createRequire(import.meta.url);
-const appdmgPackagePath = require.resolve("appdmg/package.json");
+/* appdmg는 macOS 전용이라 optionalDependencies에 있다. npm은 다른 OS에서
+   조용히 건너뛰므로, 없을 때 무슨 일이 벌어졌는지 알 수 있게 여기서 멈춘다. */
+let appdmgPackagePath;
+try {
+  appdmgPackagePath = require.resolve("appdmg/package.json");
+} catch {
+  throw new Error(
+    "appdmg를 찾을 수 없습니다. macOS에서 optional 의존성을 포함해 설치했는지 확인하세요. (npm ci)",
+  );
+}
 const appdmgBin = path.join(
   path.dirname(appdmgPackagePath),
   require(appdmgPackagePath).bin,
