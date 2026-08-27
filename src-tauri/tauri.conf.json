@@ -32,7 +32,9 @@
     "category": "Education",
     "copyright": "Copyright © 2026 Ikjun Choi",
     "license": "MIT",
-    "licenseFile": "../LICENSE",
+    "resources": {
+      "../LICENSE": "LICENSE"
+    },
     "shortDescription": "교사의 세특 초안 작성과 검토를 돕는 데스크톱 앱",
     "longDescription": "학생 활동 기록을 바탕으로 교사가 검토하고 수정할 수 있는 교과 세부능력 및 특기사항 초안을 생성합니다.",
     "icon": [
@@ -46,17 +48,18 @@
       "minimumSystemVersion": "12.0",
       "signingIdentity": "-",
       "dmg": {
+        "background": "dmg/background.png",
         "windowSize": {
-          "width": 660,
-          "height": 400
+          "width": 700,
+          "height": 460
         },
         "appPosition": {
-          "x": 180,
-          "y": 170
+          "x": 200,
+          "y": 250
         },
         "applicationFolderPosition": {
-          "x": 480,
-          "y": 170
+          "x": 500,
+          "y": 250
         }
       }
     }
