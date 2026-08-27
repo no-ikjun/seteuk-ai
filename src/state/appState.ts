@@ -7,6 +7,10 @@ import {
   isProjectValid,
   type Project,
 } from "../domain/project/Project";
+import {
+  coerceRecordType,
+  type SchoolLevel,
+} from "../domain/record/RecordSpec";
 import type {
   ColumnMapping,
   StudentRecord,
@@ -128,11 +132,18 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         error: "",
         notice: "",
       };
-    case "projectChanged":
-      return {
-        ...state,
-        project: { ...state.project, [action.field]: action.value },
-      };
+    case "projectChanged": {
+      const project = { ...state.project, [action.field]: action.value };
+      /* 학교급을 바꾸면 지금 고른 항목이 그 학교급에 없을 수 있다.
+         (예: 고등학교 동아리활동 → 초등학교) 조용히 어긋난 채로 두지 않는다. */
+      if (action.field === "schoolLevel") {
+        project.recordType = coerceRecordType(
+          action.value as SchoolLevel,
+          state.project.recordType,
+        );
+      }
+      return { ...state, project };
+    }
     case "generationSettingChanged":
       return {
         ...state,

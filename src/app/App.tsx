@@ -98,6 +98,7 @@ export default function App() {
         <ExportConfirmationModal
           incompleteCount={app.pendingExport.incomplete}
           unreviewedCount={app.pendingExport.unreviewed}
+          untouchedCount={app.pendingExport.untouched}
           onConfirm={app.confirmExport}
           onCancel={app.cancelExportConfirmation}
         />
@@ -156,6 +157,7 @@ export default function App() {
               generatedResult={app.currentStudent?.generatedResult ?? ""}
               result={app.currentStudent?.result ?? ""}
               targetLength={app.state.project.avgLength}
+              complianceFindings={app.currentComplianceFindings}
               currentStudent={app.currentStudent}
               reviewed={app.currentStudent?.reviewed ?? false}
               shortcutsEnabled={shortcutsEnabled}

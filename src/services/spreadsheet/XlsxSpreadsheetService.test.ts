@@ -95,6 +95,8 @@ describe("buildResultsWorkbook", () => {
       fileName: "학생 활동.xlsx",
       mapping: { displayKey: "이름", activityKeys: ["활동"] },
       project: {
+        schoolLevel: "high",
+        recordType: "subject",
         subject: "국어",
         theme: "독서 활동",
         avgLength: 420,
@@ -137,6 +139,8 @@ describe("buildResultsWorkbook", () => {
       fileName: "한글 학생 명단.xlsx",
       mapping: { displayKey: "이름", activityKeys: ["활동"] },
       project: {
+        schoolLevel: "high",
+        recordType: "subject",
         subject: "국어",
         theme: "토론",
         avgLength: 420,
@@ -166,6 +170,8 @@ describe("buildResultsWorkbook", () => {
         fileName: "학생.xlsx",
         mapping: { displayKey: "이름", activityKeys: ["활동"] },
         project: {
+          schoolLevel: "high",
+          recordType: "subject",
           subject: "국어",
           theme: "토론",
           avgLength: 420,

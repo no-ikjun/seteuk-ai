@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::AppError,
-    models::{GenerationRequest, GenerationSettings, Project, Student},
+    models::{GenerationRequest, GenerationSettings, Project, RecordType, SchoolLevel, Student},
     openai,
 };
 
@@ -24,9 +24,53 @@ struct GenerationSettingsDto {
     batch_delay_ms: u64,
 }
 
+/* 화면에서 고른 학교급과 기록 항목. 프롬프트의 작성 기준과 금지 사항이
+이 두 값으로 갈린다. */
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum SchoolLevelDto {
+    Elementary,
+    Middle,
+    High,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum RecordTypeDto {
+    Subject,
+    Autonomy,
+    Club,
+    Career,
+    Behavior,
+}
+
+impl From<SchoolLevelDto> for SchoolLevel {
+    fn from(value: SchoolLevelDto) -> Self {
+        match value {
+            SchoolLevelDto::Elementary => SchoolLevel::Elementary,
+            SchoolLevelDto::Middle => SchoolLevel::Middle,
+            SchoolLevelDto::High => SchoolLevel::High,
+        }
+    }
+}
+
+impl From<RecordTypeDto> for RecordType {
+    fn from(value: RecordTypeDto) -> Self {
+        match value {
+            RecordTypeDto::Subject => RecordType::Subject,
+            RecordTypeDto::Autonomy => RecordType::Autonomy,
+            RecordTypeDto::Club => RecordType::Club,
+            RecordTypeDto::Career => RecordType::Career,
+            RecordTypeDto::Behavior => RecordType::Behavior,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ProjectDto {
+    school_level: SchoolLevelDto,
+    record_type: RecordTypeDto,
     subject: String,
     theme: String,
     avg_length: i32,
@@ -73,6 +117,8 @@ impl From<GenerateRequestDto> for GenerationRequest {
     fn from(request: GenerateRequestDto) -> Self {
         Self {
             project: Project {
+                school_level: request.project.school_level.into(),
+                record_type: request.project.record_type.into(),
                 subject: request.project.subject,
                 theme: request.project.theme,
                 avg_length: request.project.avg_length,

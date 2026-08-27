@@ -1,4 +1,5 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { checkCompliance } from "../domain/compliance/ComplianceCheck";
 import {
   activityEntries,
   clampText,
@@ -70,6 +71,7 @@ export function useSeeteukApp({
   const [pendingExport, setPendingExport] = useState<{
     incomplete: number;
     unreviewed: number;
+    untouched: number;
   } | null>(null);
   const externalSendConfirmedRef = useRef(false);
   const cancelBatchRef = useRef(false);
@@ -292,8 +294,14 @@ export function useSeeteukApp({
     const unreviewed = state.students.filter(
       (student) => student.result.trim() && !student.reviewed,
     ).length;
-    if (incomplete > 0 || unreviewed > 0) {
-      setPendingExport({ incomplete, unreviewed });
+    /* 기재요령은 AI가 생성한 자료를 서술형 항목에 '그대로' 입력하는 행위를
+       금지한다. 한 글자도 고치지 않은 초안이 남아 있으면 저장 전에 알린다. */
+    const untouched = state.students.filter(
+      (student) =>
+        student.result.trim() && student.result === student.generatedResult,
+    ).length;
+    if (incomplete > 0 || unreviewed > 0 || untouched > 0) {
+      setPendingExport({ incomplete, unreviewed, untouched });
       return;
     }
     performExport();
@@ -355,6 +363,19 @@ export function useSeeteukApp({
     : "";
   const currentActivityText = clampText(currentActivityFullText);
 
+  /* 결과를 고칠 때마다 다시 훑는다. 검사는 PC 안에서만 도는 문자열 대조라
+     비용이 없지만, 학교급과 항목이 바뀌면 적용할 규칙도 달라진다. */
+  const currentResult = currentStudent?.result ?? "";
+  const currentComplianceFindings = useMemo(
+    () =>
+      checkCompliance(
+        currentResult,
+        state.project.schoolLevel,
+        state.project.recordType,
+      ),
+    [currentResult, state.project.schoolLevel, state.project.recordType],
+  );
+
   return {
     state,
     currentStudent,
@@ -369,6 +390,7 @@ export function useSeeteukApp({
     /* 길이 제한으로 잘렸는지. 잘린 경우 항목 목록이 실제 전송분보다 많다. */
     currentActivityClamped:
       currentActivityText !== currentActivityFullText,
+    currentComplianceFindings,
     generatedCount: selectGeneratedCount(state),
     reviewedCount: selectReviewedCount(state),
     selectedCount: state.students.filter((student) => student.selected).length,

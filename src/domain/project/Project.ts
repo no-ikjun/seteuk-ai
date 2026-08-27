@@ -1,4 +1,13 @@
+import {
+  subjectField,
+  writingStyle,
+  type RecordType,
+  type SchoolLevel,
+} from "../record/RecordSpec";
+
 export type Project = {
+  schoolLevel: SchoolLevel;
+  recordType: RecordType;
   subject: string;
   theme: string;
   avgLength: number;
@@ -7,22 +16,34 @@ export type Project = {
 };
 
 export const DEFAULT_PROJECT: Project = {
+  schoolLevel: "high",
+  recordType: "subject",
   subject: "국어",
   theme: "독서 활동 기반 세특",
   avgLength: 420,
-  format:
-    "교사 관찰자 시점(3인칭). 활동/과정/태도/성장 중심. 구체적 근거를 1~2개 포함. 과장 금지. 문장 3~5개.",
-  example:
-    "학생은 독서 활동에서 핵심 개념을 스스로 재구성하며 이해를 확장하는 태도를 보임. 작품의 주제 의식을 자신의 경험과 연결해 해석하고, 근거를 들어 의견을 정리함. 토론 과정에서도 타인의 관점을 경청하며 논지를 보완해 나가며, 질문을 통해 논의의 깊이를 더함.",
+  ...writingStyle("subject"),
 };
 
+/* 채워야 하는 칸의 목록. 화면은 이 목록으로 어느 칸이 비었는지 표시하고,
+   생성 준비 여부도 같은 기준으로 판단한다. 두 곳이 어긋나면 버튼은 눌리지
+   않는데 이유는 보이지 않는 상태가 된다. */
+export type ProjectField = "subject" | "theme" | "avgLength" | "format" | "example";
+
+export function missingProjectFields(project: Project): ProjectField[] {
+  const missing: ProjectField[] = [];
+  /* 행동특성 및 종합의견은 특정 교과나 활동에 매이지 않아 이 칸을 묻지 않는다. */
+  if (subjectField(project.recordType) && !project.subject.trim()) {
+    missing.push("subject");
+  }
+  if (!project.theme.trim()) missing.push("theme");
+  if (!Number.isFinite(project.avgLength) || project.avgLength <= 0) {
+    missing.push("avgLength");
+  }
+  if (!project.format.trim()) missing.push("format");
+  if (!project.example.trim()) missing.push("example");
+  return missing;
+}
+
 export function isProjectValid(project: Project) {
-  return Boolean(
-    project.subject.trim() &&
-      project.theme.trim() &&
-      Number.isFinite(project.avgLength) &&
-      project.avgLength > 0 &&
-      project.format.trim() &&
-      project.example.trim(),
-  );
+  return missingProjectFields(project).length === 0;
 }

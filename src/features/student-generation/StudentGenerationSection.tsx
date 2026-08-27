@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import type { ComplianceFinding } from "../../domain/compliance/ComplianceCheck";
 import {
   getStudentDisplay,
   getStudentStage,
@@ -18,6 +19,7 @@ import {
 } from "../../shared/icons";
 import { MOD_LABEL, useShortcuts } from "../../shared/keyboard/useShortcuts";
 import type { BatchState } from "../../state/appState";
+import { ComplianceNotice } from "./ComplianceNotice";
 import { ActivityPreview } from "./ActivityPreview";
 import { StudentListPanel } from "./StudentListPanel";
 import {
@@ -37,6 +39,7 @@ type StudentGenerationSectionProps = {
   generatedResult: string;
   result: string;
   targetLength: number;
+  complianceFindings: ComplianceFinding[];
   currentStudent?: StudentRecord;
   studentRetryCount: number;
   reviewed: boolean;
@@ -98,6 +101,7 @@ export function StudentGenerationSection({
   generatedResult,
   result,
   targetLength,
+  complianceFindings,
   currentStudent,
   studentRetryCount,
   reviewed,
@@ -380,9 +384,9 @@ export function StudentGenerationSection({
                   <div className="fieldHead">
                     <span className="label">
                       최종 결과
-                      {isEdited && (
-                        <span className="badge editedBadge">수정됨</span>
-                      )}
+                      {/* 상태를 알리는 한 마디라 칩으로 만들지 않는다.
+                          테두리를 두르면 라벨 줄의 높이가 그만큼 커진다. */}
+                      {isEdited && <span className="editedNote">수정됨</span>}
                     </span>
                     <div className="fieldHeadActions">
                       {isEdited && (
@@ -401,6 +405,7 @@ export function StudentGenerationSection({
                           구분하는 표시다. 다시 생성하면 자동으로 풀린다. */}
                       <label className="reviewToggle">
                         <input
+                          className="visuallyHidden"
                           type="checkbox"
                           checked={reviewed}
                           disabled={busy || !result.trim()}
@@ -421,6 +426,7 @@ export function StudentGenerationSection({
                     disabled={busy || !generatedResult}
                     placeholder="생성 결과가 여기에 표시됩니다. 생성 후 수정한 내용이 엑셀에 저장됩니다."
                   />
+                  <ComplianceNotice findings={complianceFindings} />
                   <p className="mutedSmall textCount">
                     <span
                       className={lengthClassName(result.length, targetLength)}

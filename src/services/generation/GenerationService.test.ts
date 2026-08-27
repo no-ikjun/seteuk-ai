@@ -16,6 +16,8 @@ import { TauriGenerationService } from "./TauriGenerationService";
 
 const request: GenerationRequest = {
   project: {
+    schoolLevel: "high",
+    recordType: "subject",
     subject: "국어",
     theme: "독서",
     avgLength: 420,

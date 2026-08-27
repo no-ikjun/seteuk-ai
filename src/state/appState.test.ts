@@ -19,6 +19,48 @@ function loadedState(): AppState {
 }
 
 describe("appReducer", () => {
+  it("학교급을 바꾸면 그 학교급에 없는 항목을 함께 옮긴다", () => {
+    const withClub = appReducer(INITIAL_APP_STATE, {
+      type: "projectChanged",
+      field: "recordType",
+      value: "club",
+    });
+    expect(withClub.project.recordType).toBe("club");
+
+    /* 초등학교는 동아리활동 특기사항을 자율·자치활동과 통합해 입력한다. */
+    const elementary = appReducer(withClub, {
+      type: "projectChanged",
+      field: "schoolLevel",
+      value: "elementary",
+    });
+    expect(elementary.project.schoolLevel).toBe("elementary");
+    expect(elementary.project.recordType).toBe("autonomy");
+  });
+
+  it("학교급을 바꿔도 그 학교급에 있는 항목은 그대로 둔다", () => {
+    const behavior = appReducer(INITIAL_APP_STATE, {
+      type: "projectChanged",
+      field: "recordType",
+      value: "behavior",
+    });
+    const elementary = appReducer(behavior, {
+      type: "projectChanged",
+      field: "schoolLevel",
+      value: "elementary",
+    });
+    expect(elementary.project.recordType).toBe("behavior");
+  });
+
+  it("학교급이 아닌 값을 바꿀 때는 항목을 건드리지 않는다", () => {
+    const changed = appReducer(INITIAL_APP_STATE, {
+      type: "projectChanged",
+      field: "subject",
+      value: "화학",
+    });
+    expect(changed.project.subject).toBe("화학");
+    expect(changed.project.recordType).toBe(INITIAL_APP_STATE.project.recordType);
+  });
+
   it("초안을 다시 생성하면 검토 완료 표시가 풀린다", () => {
     const base = loadedState();
     const studentId = base.students[0].id;
