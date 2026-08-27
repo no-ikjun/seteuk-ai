@@ -85,8 +85,14 @@ fn mounted_image_path(volume: &Path) -> Option<PathBuf> {
 
 /// 겹치지 않는 휴지통 경로를 만든다. `이름.dmg`, `이름 2.dmg`, `이름 3.dmg` …
 fn trash_destination(trash: &Path, file_name: &Path) -> PathBuf {
-    let stem = file_name.file_stem().unwrap_or_default().to_string_lossy().into_owned();
-    let extension = file_name.extension().map(|e| e.to_string_lossy().into_owned());
+    let stem = file_name
+        .file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned();
+    let extension = file_name
+        .extension()
+        .map(|e| e.to_string_lossy().into_owned());
     let with_extension = |base: String| match &extension {
         Some(extension) => format!("{base}.{extension}"),
         None => base,
@@ -206,7 +212,9 @@ pub fn offer_move_to_applications(app: &AppHandle) {
             .unwrap_or(false);
         if !copied {
             app.dialog()
-                .message("Applications 폴더로 옮기지 못했습니다. Finder에서 직접 끌어다 놓아주세요.")
+                .message(
+                    "Applications 폴더로 옮기지 못했습니다. Finder에서 직접 끌어다 놓아주세요.",
+                )
                 .title("옮기지 못했습니다")
                 .kind(MessageDialogKind::Error)
                 .blocking_show();
@@ -236,10 +244,14 @@ mod tests {
 
     #[test]
     fn 실행_파일_경로에서_앱_번들을_찾는다() {
-        let exe = Path::new("/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app/Contents/MacOS/seteuk-cheokcheok");
+        let exe = Path::new(
+            "/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app/Contents/MacOS/seteuk-cheokcheok",
+        );
         assert_eq!(
             bundle_path_from_exe(exe),
-            Some(PathBuf::from("/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app")),
+            Some(PathBuf::from(
+                "/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app"
+            )),
         );
         // .app 안이 아니면 대상이 아니다.
         assert_eq!(bundle_path_from_exe(Path::new("/usr/local/bin/tool")), None);
@@ -248,11 +260,16 @@ mod tests {
     #[test]
     fn 볼륨_루트만_인정한다() {
         assert_eq!(
-            volume_root(Path::new("/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app")),
+            volume_root(Path::new(
+                "/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app"
+            )),
             Some(PathBuf::from("/Volumes/Seteuk Cheokcheok")),
         );
         // Applications에서 실행 중이면 옮길 이유가 없다.
-        assert_eq!(volume_root(Path::new("/Applications/Seteuk Cheokcheok.app")), None);
+        assert_eq!(
+            volume_root(Path::new("/Applications/Seteuk Cheokcheok.app")),
+            None
+        );
     }
 
     #[test]
@@ -271,10 +288,15 @@ image-alias     : /Users/me/Downloads/Seteuk Cheokcheok_0.3.1_aarch64.dmg
 ";
         assert_eq!(
             parse_image_path(output, Path::new("/Volumes/Seteuk Cheokcheok")),
-            Some(PathBuf::from("/Users/me/Downloads/Seteuk Cheokcheok_0.3.1_aarch64.dmg")),
+            Some(PathBuf::from(
+                "/Users/me/Downloads/Seteuk Cheokcheok_0.3.1_aarch64.dmg"
+            )),
         );
         // 디스크 이미지가 아닌 볼륨은 찾지 못한다.
-        assert_eq!(parse_image_path(output, Path::new("/Volumes/Macintosh HD")), None);
+        assert_eq!(
+            parse_image_path(output, Path::new("/Volumes/Macintosh HD")),
+            None
+        );
     }
 
     #[test]
