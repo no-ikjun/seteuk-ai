@@ -23,6 +23,12 @@ pub(crate) struct Student {
     pub(crate) extra_keywords: String,
 }
 
+pub(crate) struct ModelInfo {
+    pub(crate) id: String,
+    pub(crate) created: i64,
+    pub(crate) owned_by: String,
+}
+
 pub(crate) struct GenerationResult {
     pub(crate) text: String,
     pub(crate) attempts: u32,

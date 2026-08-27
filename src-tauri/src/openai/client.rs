@@ -16,7 +16,7 @@ use crate::{
 
 use super::{prompt::build_prompt, response::extract_output_text};
 
-fn validate_api_key(key: &str) -> AppResult<()> {
+pub(super) fn validate_api_key(key: &str) -> AppResult<()> {
     if key.trim().is_empty() {
         return Err(AppError::new(
             "authentication",
@@ -73,7 +73,7 @@ fn api_error_code(json: &serde_json::Value) -> String {
         .to_ascii_lowercase()
 }
 
-fn classify_api_error(status: StatusCode, json: &serde_json::Value) -> AppError {
+pub(super) fn classify_api_error(status: StatusCode, json: &serde_json::Value) -> AppError {
     let code = api_error_code(json);
     let api_message = api_error_message(json);
     if status == StatusCode::UNAUTHORIZED || status == StatusCode::FORBIDDEN {
@@ -131,7 +131,7 @@ fn backoff_duration(attempts: u32, retry_after: Option<u64>) -> Duration {
     Duration::from_millis(750_u64.saturating_mul(1_u64 << exponent))
 }
 
-fn classify_transport_error(
+pub(super) fn classify_transport_error(
     is_timeout: bool,
     is_connect: bool,
     timeout_seconds: u64,

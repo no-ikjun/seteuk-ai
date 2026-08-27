@@ -20,7 +20,10 @@ pub fn run() {
             install::offer_move_to_applications(_app.handle());
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::generate::generate])
+        .invoke_handler(tauri::generate_handler![
+            commands::generate::generate,
+            commands::models::list_models
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

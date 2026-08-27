@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { GenerationSettings } from "../domain/generation/Generation";
+import type { CuratedModel } from "../domain/generation/ModelCatalog";
 import type { Project } from "../domain/project/Project";
 import {
   isIdentifierColumn,
@@ -9,6 +10,7 @@ import { ColumnMappingSection } from "../features/column-mapping/ColumnMappingSe
 import { FileSettingsSection } from "../features/file-import/FileSettingsSection";
 import { AdvancedSettingsSection } from "../features/project-settings/AdvancedSettingsSection";
 import { ProjectSettingsSection } from "../features/project-settings/ProjectSettingsSection";
+import type { ModelAvailabilityStatus } from "../features/project-settings/useModelCatalog";
 import { AlertIcon, ChevronDownIcon } from "../shared/icons";
 
 type SettingsPanelProps = {
@@ -19,6 +21,8 @@ type SettingsPanelProps = {
   columns: string[];
   project: Project;
   generationSettings: GenerationSettings;
+  models: CuratedModel[];
+  modelStatus: ModelAvailabilityStatus;
   mapping: ColumnMapping;
   disabled: boolean;
   onUpload: (file: File) => void;
@@ -48,6 +52,8 @@ export function SettingsPanel({
   columns,
   project,
   generationSettings,
+  models,
+  modelStatus,
   mapping,
   disabled,
   onUpload,
@@ -137,6 +143,8 @@ export function SettingsPanel({
               />
               <AdvancedSettingsSection
                 generationSettings={generationSettings}
+                models={models}
+                modelStatus={modelStatus}
                 disabled={disabled}
                 onChange={onGenerationSettingChange}
               />

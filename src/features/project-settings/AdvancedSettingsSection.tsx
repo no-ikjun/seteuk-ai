@@ -1,20 +1,25 @@
 import type { GenerationSettings } from "../../domain/generation/Generation";
-import { SelectField } from "../../shared/forms/SelectField";
+import type { CuratedModel } from "../../domain/generation/ModelCatalog";
 import { ChevronDownIcon } from "../../shared/icons";
+import { ModelSelectField } from "./ModelSelectField";
+import type { ModelAvailabilityStatus } from "./useModelCatalog";
 
 type AdvancedSettingsSectionProps = {
   generationSettings: GenerationSettings;
+  models: CuratedModel[];
+  modelStatus: ModelAvailabilityStatus;
   disabled: boolean;
-  onChange: (
-    field: keyof GenerationSettings,
-    value: string | number,
-  ) => void;
+  onChange: (field: keyof GenerationSettings, value: string | number) => void;
 };
 
-/* 모델과 재시도 설정. 기본값으로 두는 사용자가 대부분이라 접어 둔다.
+/* 모델과 재시도 설정. 재시도 쪽은 기본값으로 두는 사용자가 대부분이라
+   접어 두지만, 접힌 줄에 지금 쓰는 모델을 보여 준다. 어떤 모델로
+   생성하는지는 접힌 채로도 알 수 있어야 한다.
    상태를 따로 두지 않으려고 <details>를 그대로 쓴다. */
 export function AdvancedSettingsSection({
   generationSettings,
+  models,
+  modelStatus,
   disabled,
   onChange,
 }: AdvancedSettingsSectionProps) {
@@ -22,21 +27,18 @@ export function AdvancedSettingsSection({
     <details className="settingsSection advancedSettings">
       <summary className="settingsSectionTitle advancedSummary">
         <ChevronDownIcon className="advancedChevron" size={14} />
-        고급: 모델과 재시도
+        모델: {generationSettings.model || "미선택"} · 고급 설정
       </summary>
 
+      <ModelSelectField
+        model={generationSettings.model}
+        models={models}
+        status={modelStatus}
+        disabled={disabled}
+        onChange={(model) => onChange("model", model)}
+      />
+
       <div className="settingsGrid">
-        <label>
-          <span className="label">OpenAI 모델</span>
-          <SelectField
-            value={generationSettings.model}
-            disabled={disabled}
-            onChange={(event) => onChange("model", event.target.value)}
-          >
-            <option value="gpt-4o">gpt-4o</option>
-            <option value="gpt-4o-mini">gpt-4o-mini</option>
-          </SelectField>
-        </label>
         <label>
           <span className="label">요청 제한 시간(초)</span>
           <input

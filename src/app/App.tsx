@@ -2,10 +2,12 @@ import "../App.css";
 import { ApiKeyModal } from "../features/api-key/ApiKeyModal";
 import { useApiKey } from "../features/api-key/useApiKey";
 import { FileImportSection } from "../features/file-import/FileImportSection";
+import { useModelCatalog } from "../features/project-settings/useModelCatalog";
 import { ExportConfirmationModal } from "../features/result-export/ExportConfirmationModal";
 import { StudentGenerationSection } from "../features/student-generation/StudentGenerationSection";
 import { SendConfirmationModal } from "../features/student-generation/SendConfirmationModal";
 import { TauriGenerationService } from "../services/generation/TauriGenerationService";
+import { TauriModelCatalogService } from "../services/models/TauriModelCatalogService";
 import {
   XlsxSpreadsheetExporter,
   XlsxSpreadsheetReader,
@@ -18,6 +20,7 @@ import { SettingsPanel } from "./SettingsPanel";
 import { useSeeteukApp } from "./useSeeteukApp";
 
 const generationService = new TauriGenerationService();
+const modelCatalogService = new TauriModelCatalogService();
 const spreadsheetReader = new XlsxSpreadsheetReader();
 const spreadsheetExporter = new XlsxSpreadsheetExporter();
 const spreadsheetTemplateExporter = new XlsxSpreadsheetTemplateExporter();
@@ -32,6 +35,16 @@ export default function App() {
     spreadsheetExporter,
     spreadsheetTemplateExporter,
   });
+
+  /* 어떤 모델을 보여줄지는 앱이 정하고, 이 조회는 그중 이 계정에서 못 쓰는
+     모델을 빼는 데만 쓴다. 조회에 실패해도 목록은 그대로 나온다. */
+  const models = useModelCatalog({
+    apiKey: apiKey.apiKey,
+    service: modelCatalogService,
+    selectedModel: app.state.generationSettings.model,
+    onSuggestModel: (model) => app.changeGenerationSetting("model", model),
+  });
+
   const busy = app.isGenerating || app.state.batch.running;
   const hasFile = app.state.students.length > 0;
 
@@ -126,6 +139,8 @@ export default function App() {
               onDownloadSample={() => app.downloadStarterWorkbook("sample")}
               onProjectChange={app.changeProject}
               onGenerationSettingChange={app.changeGenerationSetting}
+              models={models.models}
+              modelStatus={models.status}
               onDisplayChange={app.changeDisplayColumn}
               onActivityToggle={app.toggleActivityColumn}
             />

@@ -64,7 +64,7 @@ export function ApiKeyModal({
         </div>
         <p className="mutedSmall modalHint">
           키는 OpenAI 계정의 <span className="mono">API keys</span> 화면에서
-          발급합니다. 생성한 만큼 OpenAI 사용 요금이 발생합니다.
+          발급합니다. 사용한 만큼 OpenAI 요금이 발생합니다.
         </p>
         <p className="mutedSmall modalHint footNote">
           <AlertIcon size={14} />

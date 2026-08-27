@@ -1,3 +1,4 @@
+import { DEFAULT_MODEL_ID } from "./ModelCatalog";
 import type { Project } from "../project/Project";
 
 export type GenerationSettings = {
@@ -8,7 +9,7 @@ export type GenerationSettings = {
 };
 
 export const DEFAULT_GENERATION_SETTINGS: GenerationSettings = {
-  model: "gpt-4o",
+  model: DEFAULT_MODEL_ID,
   requestTimeoutSeconds: 60,
   maxRetries: 2,
   batchDelayMs: 500,
