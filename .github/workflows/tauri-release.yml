@@ -1,4 +1,4 @@
-name: Release Seteuk Cheokcheok for Windows and macOS
+name: Release 세특척척 for Windows and macOS
 
 on:
   push:
@@ -258,7 +258,10 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
           set -euo pipefail
-          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Seteuk Cheokcheok_${{ needs.validate.outputs.version }}_aarch64.dmg"
+          # 번들 이름은 tauri.conf.json의 productName에서 온다. 여기에 이름을
+          # 적어 두면 앱 이름을 바꿀 때마다 이 워크플로가 조용히 어긋난다.
+          product_name="$(jq -r .productName src-tauri/tauri.conf.json)"
+          dmg_path="src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/${product_name}_${{ needs.validate.outputs.version }}_aarch64.dmg"
 
           test -f "$dmg_path"
           xcrun notarytool submit "$dmg_path" \
@@ -273,8 +276,9 @@ jobs:
         run: |
           set -euo pipefail
           bundle_root="src-tauri/target/aarch64-apple-darwin/release/bundle"
-          app_path="$bundle_root/macos/Seteuk Cheokcheok.app"
-          dmg_path="$bundle_root/dmg/Seteuk Cheokcheok_${{ needs.validate.outputs.version }}_aarch64.dmg"
+          product_name="$(jq -r .productName src-tauri/tauri.conf.json)"
+          app_path="$bundle_root/macos/${product_name}.app"
+          dmg_path="$bundle_root/dmg/${product_name}_${{ needs.validate.outputs.version }}_aarch64.dmg"
 
           test -d "$app_path"
           test -f "$dmg_path"

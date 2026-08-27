@@ -245,12 +245,12 @@ mod tests {
     #[test]
     fn 실행_파일_경로에서_앱_번들을_찾는다() {
         let exe = Path::new(
-            "/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app/Contents/MacOS/seteuk-cheokcheok",
+            "/Volumes/세특척척/세특척척.app/Contents/MacOS/seteuk-cheokcheok",
         );
         assert_eq!(
             bundle_path_from_exe(exe),
             Some(PathBuf::from(
-                "/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app"
+                "/Volumes/세특척척/세특척척.app"
             )),
         );
         // .app 안이 아니면 대상이 아니다.
@@ -261,13 +261,13 @@ mod tests {
     fn 볼륨_루트만_인정한다() {
         assert_eq!(
             volume_root(Path::new(
-                "/Volumes/Seteuk Cheokcheok/Seteuk Cheokcheok.app"
+                "/Volumes/세특척척/세특척척.app"
             )),
-            Some(PathBuf::from("/Volumes/Seteuk Cheokcheok")),
+            Some(PathBuf::from("/Volumes/세특척척")),
         );
         // Applications에서 실행 중이면 옮길 이유가 없다.
         assert_eq!(
-            volume_root(Path::new("/Applications/Seteuk Cheokcheok.app")),
+            volume_root(Path::new("/Applications/세특척척.app")),
             None
         );
     }
@@ -281,15 +281,15 @@ image-alias     : /Users/me/Downloads/Other.dmg
 /dev/disk3\tGUID_partition_scheme\t
 /dev/disk3s1\t48465300-0000-11AA-AA11-00306543ECAC\t/Volumes/Other
 ================================================
-image-path      : /Users/me/Downloads/Seteuk Cheokcheok_0.3.1_aarch64.dmg
-image-alias     : /Users/me/Downloads/Seteuk Cheokcheok_0.3.1_aarch64.dmg
+image-path      : /Users/me/Downloads/세특척척_0.3.1_aarch64.dmg
+image-alias     : /Users/me/Downloads/세특척척_0.3.1_aarch64.dmg
 /dev/disk4\tGUID_partition_scheme\t
-/dev/disk4s1\t48465300-0000-11AA-AA11-00306543ECAC\t/Volumes/Seteuk Cheokcheok
+/dev/disk4s1\t48465300-0000-11AA-AA11-00306543ECAC\t/Volumes/세특척척
 ";
         assert_eq!(
-            parse_image_path(output, Path::new("/Volumes/Seteuk Cheokcheok")),
+            parse_image_path(output, Path::new("/Volumes/세특척척")),
             Some(PathBuf::from(
-                "/Users/me/Downloads/Seteuk Cheokcheok_0.3.1_aarch64.dmg"
+                "/Users/me/Downloads/세특척척_0.3.1_aarch64.dmg"
             )),
         );
         // 디스크 이미지가 아닌 볼륨은 찾지 못한다.
