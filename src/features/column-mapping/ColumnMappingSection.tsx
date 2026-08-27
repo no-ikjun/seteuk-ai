@@ -24,13 +24,14 @@ export function ColumnMappingSection({
     isIdentifierColumn,
   );
   return (
-    <div className="settingsSection">
-      <h3 className="settingsSectionTitle">컬럼 매핑</h3>
+    <section className="settingsSection">
+      <h3 className="settingsSectionTitle">어떤 데이터를 보내나요</h3>
       {columns.length === 0 ? (
         <p className="muted">파일을 업로드하면 컬럼이 여기에 표시됩니다.</p>
       ) : (
         <>
-          <label className="label">학생 표시용 컬럼(AI 전송 제외)</label>
+          <label className="label">학생 표시용 컬럼</label>
+          <p className="fieldHint">화면에서 학생을 구분할 때만 씁니다. AI로 보내지 않습니다.</p>
           <SelectField
             value={mapping.displayKey}
             disabled={disabled}
@@ -43,7 +44,8 @@ export function ColumnMappingSection({
             ))}
           </SelectField>
 
-          <label className="label">활동 텍스트로 합칠 컬럼(복수 선택)</label>
+          <label className="label">AI로 보낼 활동 컬럼</label>
+          <p className="fieldHint">고른 컬럼만 전송됩니다. 여러 개를 고를 수 있습니다.</p>
           <div className="pillBox">
             {columns.map((column) => {
               const selected = mapping.activityKeys.includes(column);
@@ -78,6 +80,6 @@ export function ColumnMappingSection({
           )}
         </>
       )}
-    </div>
+    </section>
   );
 }

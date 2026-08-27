@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { GenerationSettings } from "../domain/generation/Generation";
 import type { CuratedModel } from "../domain/generation/ModelCatalog";
-import type { Project } from "../domain/project/Project";
+import {
+  missingProjectFields,
+  type Project,
+} from "../domain/project/Project";
 import {
   isIdentifierColumn,
   type ColumnMapping,
@@ -10,6 +13,7 @@ import { ColumnMappingSection } from "../features/column-mapping/ColumnMappingSe
 import { FileSettingsSection } from "../features/file-import/FileSettingsSection";
 import { AdvancedSettingsSection } from "../features/project-settings/AdvancedSettingsSection";
 import { ProjectSettingsSection } from "../features/project-settings/ProjectSettingsSection";
+import { WritingStyleSection } from "../features/project-settings/WritingStyleSection";
 import type { ModelAvailabilityStatus } from "../features/project-settings/useModelCatalog";
 import { AlertIcon, ChevronDownIcon } from "../shared/icons";
 
@@ -65,6 +69,9 @@ export function SettingsPanel({
   onActivityToggle,
 }: SettingsPanelProps) {
   const [open, setOpen] = useState(true);
+
+  /* 어느 칸이 비어 생성을 막는지 각 칸 옆에서 알린다. */
+  const missing = missingProjectFields(project);
 
   /* 접혀 있어도 이 경고만은 계속 보여야 한다. 개인정보 안내는 문서와
      화면이 어긋나면 안 되는 항목이다. */
@@ -127,29 +134,39 @@ export function SettingsPanel({
             onDownloadSample={onDownloadSample}
           />
 
+          {/* 위 줄은 '무엇을'과 '어떤 데이터로'를 나란히 둔다. 둘 다 짧은
+              칸들이라 높이가 비슷하게 맞는다. 긴 글이 들어가는 문체는 아래
+              줄을 통째로 써서 한쪽만 길어지지 않게 한다. */}
           <div className="settingsColumns">
             <ProjectSettingsSection
               project={project}
+              missing={missing}
               disabled={disabled}
               onChange={onProjectChange}
             />
-            <div className="settingsColumn">
-              <ColumnMappingSection
-                columns={columns}
-                mapping={mapping}
-                disabled={disabled}
-                onDisplayChange={onDisplayChange}
-                onActivityToggle={onActivityToggle}
-              />
-              <AdvancedSettingsSection
-                generationSettings={generationSettings}
-                models={models}
-                modelStatus={modelStatus}
-                disabled={disabled}
-                onChange={onGenerationSettingChange}
-              />
-            </div>
+            <ColumnMappingSection
+              columns={columns}
+              mapping={mapping}
+              disabled={disabled}
+              onDisplayChange={onDisplayChange}
+              onActivityToggle={onActivityToggle}
+            />
           </div>
+
+          <WritingStyleSection
+            project={project}
+            missing={missing}
+            disabled={disabled}
+            onChange={onProjectChange}
+          />
+
+          <AdvancedSettingsSection
+            generationSettings={generationSettings}
+            models={models}
+            modelStatus={modelStatus}
+            disabled={disabled}
+            onChange={onGenerationSettingChange}
+          />
         </div>
       )}
     </section>

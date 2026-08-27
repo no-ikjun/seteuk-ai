@@ -10,7 +10,10 @@ type FilePickerLabelProps = {
 /* 파일 입력을 감싼 label.
    입력 자체는 화면에서 숨기고 label을 눌러 여는 형태라, 포커스 링은
    App.css의 :focus-within이 label에 그린다. label은 위젯이 아니므로
-   비활성 표시는 aria-disabled가 아니라 data-disabled로 한다. */
+   비활성 표시는 aria-disabled가 아니라 data-disabled로 한다.
+
+   `filePicker`는 넘겨받은 클래스와 무관하게 숨긴 입력을 이 label 안에
+   가두기 위한 것이다. 자세한 이유는 App.css의 .visuallyHidden에 적었다. */
 export function FilePickerLabel({
   className,
   disabled,
@@ -18,7 +21,10 @@ export function FilePickerLabel({
   children,
 }: FilePickerLabelProps) {
   return (
-    <label className={className} data-disabled={disabled || undefined}>
+    <label
+      className={`filePicker ${className}`}
+      data-disabled={disabled || undefined}
+    >
       <input
         className="visuallyHidden"
         type="file"

@@ -328,11 +328,11 @@ export function StudentGenerationSection({
                   />
                 </div>
 
-                <div className="editorCol">
+                <div className="editorCol resultCol">
                   <label className="label">교사 추가 키워드(선택)</label>
                   <textarea
-                    className="textarea"
-                    rows={3}
+                    className="textarea keywordInput"
+                    rows={2}
                     placeholder="예: 발표 주도, 근거 제시 우수, 자기주도 탐구"
                     value={extraKeywords}
                     onChange={(event) =>
