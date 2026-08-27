@@ -39,7 +39,8 @@ pub(crate) struct Project {
     pub(crate) record_type: RecordType,
     pub(crate) subject: String,
     pub(crate) theme: String,
-    pub(crate) avg_length: i32,
+    /* 나이스가 받는 Byte 기준 목표 분량. 프롬프트에는 한글 자 수로 바꿔 넣는다. */
+    pub(crate) target_bytes: i32,
     pub(crate) format: String,
     pub(crate) example: String,
 }
@@ -55,6 +56,16 @@ pub(crate) struct ModelInfo {
     pub(crate) owned_by: String,
 }
 
+/* 이미 만들어진 문장의 분량만 맞추는 요청. 학생 기록은 보내지 않는다. */
+pub(crate) struct ReviseRequest {
+    pub(crate) settings: GenerationSettings,
+    pub(crate) school_level: SchoolLevel,
+    pub(crate) record_type: RecordType,
+    pub(crate) text: String,
+    /// 맞출 분량(한글 기준 글자 수).
+    pub(crate) target_chars: i32,
+}
+
 pub(crate) struct GenerationResult {
     pub(crate) text: String,
     pub(crate) attempts: u32,
@@ -67,7 +78,7 @@ pub(crate) fn test_project() -> Project {
         record_type: RecordType::Subject,
         subject: "국어".to_string(),
         theme: "독서 활동".to_string(),
-        avg_length: 420,
+        target_bytes: 1500,
         format: "교사 관찰자 시점".to_string(),
         example: "예시 문장".to_string(),
     }

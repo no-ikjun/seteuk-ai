@@ -82,7 +82,7 @@ export function SettingsPanel({
     `학생 ${studentCount}명`,
     project.subject,
     project.theme,
-    `${project.avgLength}자`,
+    `${project.targetBytes.toLocaleString()}Byte`,
     `활동 컬럼 ${mapping.activityKeys.length}개`,
   ]
     .filter((part) => String(part).trim().length > 0)

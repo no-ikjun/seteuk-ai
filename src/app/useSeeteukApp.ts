@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { checkCompliance } from "../domain/compliance/ComplianceCheck";
 import {
+  hangulCharsFor,
+  recordByteLimit,
+} from "../domain/record/NeisBytes";
+import {
   activityEntries,
   clampText,
   createStudentRecords,
@@ -78,10 +82,11 @@ export function useSeeteukApp({
   const pendingAfterKeyRef = useRef<GenerationTarget | null>(null);
   const currentStudent = selectCurrentStudent(state);
   const isGenerating = selectIsGenerating(state);
+  const [isRevising, setIsRevising] = useState(false);
   /* 화면은 키를 뺀 준비 상태로 판단한다. 키가 없으면 버튼을 막는 대신
      눌렀을 때 키 입력으로 이어진다. */
   const isGenerationReady = selectIsGenerationReady(state);
-  const busy = isGenerating || state.batch.running;
+  const busy = isGenerating || isRevising || state.batch.running;
 
   useEffect(() => {
     if (!busy) return;
@@ -166,6 +171,45 @@ export function useSeeteukApp({
         attempts: generationError.attempts,
       });
       return message;
+    }
+  }
+
+  /* 이미 만들어진 문장의 분량만 맞춘다.
+     다시 생성하면 교사가 고쳐 둔 표현이 사라지므로, 학생 기록을 새로 보내지
+     않고 지금 화면에 있는 문장만 보낸다. */
+  async function reviseCurrentLength() {
+    const student = selectCurrentStudent(state);
+    if (!student || !student.result.trim()) return;
+    if (!apiKey) {
+      pendingAfterKeyRef.current = null;
+      onApiKeyRequired();
+      return;
+    }
+
+    setIsRevising(true);
+    dispatch({ type: "errorChanged", error: "" });
+    try {
+      const result = await generationService.reviseLength(apiKey, {
+        settings: state.generationSettings,
+        schoolLevel: state.project.schoolLevel,
+        recordType: state.project.recordType,
+        text: student.result,
+        targetChars: hangulCharsFor(state.project.targetBytes),
+      });
+      dispatch({
+        type: "resultChanged",
+        studentId: student.id,
+        value: result.text,
+      });
+      dispatch({ type: "noticeChanged", notice: "분량을 맞췄습니다." });
+    } catch (error) {
+      const revisionError = toGenerationError(error);
+      dispatch({
+        type: "errorChanged",
+        error: `분량을 맞추지 못했습니다: ${revisionError.message}`,
+      });
+    } finally {
+      setIsRevising(false);
     }
   }
 
@@ -391,11 +435,18 @@ export function useSeeteukApp({
     currentActivityClamped:
       currentActivityText !== currentActivityFullText,
     currentComplianceFindings,
+    /* 지금 고른 학교급·항목에서 나이스가 받는 최대 Byte. 제한이 없으면 null. */
+    recordByteLimit: recordByteLimit(
+      state.project.schoolLevel,
+      state.project.recordType,
+    ),
     generatedCount: selectGeneratedCount(state),
     reviewedCount: selectReviewedCount(state),
     selectedCount: state.students.filter((student) => student.selected).length,
     failedCount: state.students.filter((student) => student.status === "failed").length,
     isGenerating,
+    isRevising,
+    reviseCurrentLength,
     canGenerate: isGenerationReady,
     pendingGeneration,
     pendingExport,

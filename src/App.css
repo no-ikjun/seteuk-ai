@@ -1582,3 +1582,57 @@ h1 {
   min-height: 3.5rem;
   resize: none;
 }
+
+/* 나이스 분량 게이지.
+   나이스가 세는 단위(Byte)를 그대로 보여주고, 가늠하기 쉬운 한글 자 수를
+   옆에 적는다. 한도가 있는 항목에서만 막대가 의미를 갖는다. */
+.byteGauge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.byteGaugeTrack {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-default);
+  overflow: hidden;
+}
+
+.byteGaugeFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width var(--duration-fast) ease;
+}
+
+.byteGauge-near .byteGaugeFill {
+  background: var(--warning-solid);
+}
+
+.byteGauge-over .byteGaugeFill {
+  background: var(--danger-solid);
+}
+
+.byteGaugeText {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2xs) var(--space-xs);
+  margin: 0;
+}
+
+.byteGaugeCount {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.byteGauge-near .byteGaugeCount,
+.byteGauge-near .byteGaugeNote {
+  color: var(--warning-text);
+}
+
+.byteGauge-over .byteGaugeCount,
+.byteGauge-over .byteGaugeNote {
+  color: var(--danger-text);
+}

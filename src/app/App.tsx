@@ -156,7 +156,9 @@ export default function App() {
               extraKeywords={app.currentStudent?.extraKeywords ?? ""}
               generatedResult={app.currentStudent?.generatedResult ?? ""}
               result={app.currentStudent?.result ?? ""}
-              targetLength={app.state.project.avgLength}
+              targetBytes={app.state.project.targetBytes}
+              limitBytes={app.recordByteLimit}
+              isRevising={app.isRevising}
               complianceFindings={app.currentComplianceFindings}
               currentStudent={app.currentStudent}
               reviewed={app.currentStudent?.reviewed ?? false}
@@ -182,6 +184,7 @@ export default function App() {
               onRetryFailed={() => app.requestGeneration("failed")}
               onCancelBatch={app.cancelBatch}
               onCopyResult={() => void app.copyCurrentResult()}
+              onReviseLength={() => void app.reviseCurrentLength()}
             />
           </>
         ) : (

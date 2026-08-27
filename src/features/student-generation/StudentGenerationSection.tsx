@@ -19,6 +19,7 @@ import {
 } from "../../shared/icons";
 import { MOD_LABEL, useShortcuts } from "../../shared/keyboard/useShortcuts";
 import type { BatchState } from "../../state/appState";
+import { ByteGauge } from "./ByteGauge";
 import { ComplianceNotice } from "./ComplianceNotice";
 import { ActivityPreview } from "./ActivityPreview";
 import { StudentListPanel } from "./StudentListPanel";
@@ -38,7 +39,9 @@ type StudentGenerationSectionProps = {
   extraKeywords: string;
   generatedResult: string;
   result: string;
-  targetLength: number;
+  targetBytes: number;
+  limitBytes: number | null;
+  isRevising: boolean;
   complianceFindings: ComplianceFinding[];
   currentStudent?: StudentRecord;
   studentRetryCount: number;
@@ -64,6 +67,7 @@ type StudentGenerationSectionProps = {
   onRetryFailed: () => void;
   onCancelBatch: () => void;
   onCopyResult: () => void;
+  onReviseLength: () => void;
 };
 
 function batchProgressText(batch: BatchState) {
@@ -84,12 +88,6 @@ function batchProgressText(batch: BatchState) {
 
 /* 목표에서 10% 넘게 벗어나면 색으로 알린다. 목표는 평균 분량이라 딱 맞춰야
    하는 값이 아니므로 경고가 아니라 참고 표시로 둔다. */
-function lengthClassName(length: number, target: number) {
-  if (length === 0 || target <= 0) return "";
-  const ratio = length / target;
-  return ratio >= 0.9 && ratio <= 1.1 ? "countOn" : "countOff";
-}
-
 export function StudentGenerationSection({
   students,
   currentIndex,
@@ -100,7 +98,9 @@ export function StudentGenerationSection({
   extraKeywords,
   generatedResult,
   result,
-  targetLength,
+  targetBytes,
+  limitBytes,
+  isRevising,
   complianceFindings,
   currentStudent,
   studentRetryCount,
@@ -126,6 +126,7 @@ export function StudentGenerationSection({
   onRetryFailed,
   onCancelBatch,
   onCopyResult,
+  onReviseLength,
 }: StudentGenerationSectionProps) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<StudentFilter>("all");
@@ -427,17 +428,19 @@ export function StudentGenerationSection({
                     placeholder="생성 결과가 여기에 표시됩니다. 생성 후 수정한 내용이 엑셀에 저장됩니다."
                   />
                   <ComplianceNotice findings={complianceFindings} />
-                  <p className="mutedSmall textCount">
-                    <span
-                      className={lengthClassName(result.length, targetLength)}
-                    >
-                      {result.length.toLocaleString()}자
-                    </span>
-                    {targetLength > 0 &&
-                      ` / 목표 ${targetLength.toLocaleString()}자`}
-                    {studentRetryCount > 0 &&
-                      ` · 자동 재시도 ${studentRetryCount}회 후 완료`}
-                  </p>
+                  <ByteGauge
+                    text={result}
+                    targetBytes={targetBytes}
+                    limitBytes={limitBytes}
+                    revising={isRevising}
+                    disabled={busy}
+                    onRevise={onReviseLength}
+                  />
+                  {studentRetryCount > 0 && (
+                    <p className="mutedSmall textCount">
+                      자동 재시도 {studentRetryCount}회 후 완료
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

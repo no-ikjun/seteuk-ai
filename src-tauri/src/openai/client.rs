@@ -11,10 +11,13 @@ use crate::{
         OPENAI_RESPONSES_URL,
     },
     error::{AppError, AppResult},
-    models::{GenerationRequest, GenerationResult},
+    models::{GenerationRequest, GenerationResult, GenerationSettings, ReviseRequest},
 };
 
-use super::{prompt::build_prompt, response::extract_output_text};
+use super::{
+    prompt::{build_prompt, build_revise_prompt},
+    response::extract_output_text,
+};
 
 pub(super) fn validate_api_key(key: &str) -> AppResult<()> {
     if key.trim().is_empty() {
@@ -152,8 +155,33 @@ pub(crate) async fn generate(
     api_key: &str,
     body: &GenerationRequest,
 ) -> AppResult<GenerationResult> {
+    request_text(
+        api_key,
+        &body.settings,
+        build_prompt(&body.project, &body.student),
+    )
+    .await
+}
+
+/* 분량을 맞추는 재요청. 학생 기록을 다시 보내지 않고 이미 만들어진 문장만
+   줄이거나 늘린다. 교사가 이미 고쳐 둔 내용을 살리면서 분량만 맞출 수 있고,
+   보내는 양이 적어 비용도 낮다. */
+pub(crate) async fn revise_length(
+    api_key: &str,
+    body: &ReviseRequest,
+) -> AppResult<GenerationResult> {
+    request_text(api_key, &body.settings, build_revise_prompt(body)).await
+}
+
+/* 생성과 재요청이 함께 쓰는 요청 경로. 타임아웃·재시도·오류 구분이 두 곳으로
+   갈라지면 한쪽만 고쳐지는 일이 생긴다. */
+async fn request_text(
+    api_key: &str,
+    settings: &GenerationSettings,
+    prompt: String,
+) -> AppResult<GenerationResult> {
     validate_api_key(api_key)?;
-    let model = body.settings.model.trim();
+    let model = settings.model.trim();
     if model.is_empty() {
         return Err(AppError::new(
             "invalid_request",
@@ -162,11 +190,10 @@ pub(crate) async fn generate(
         ));
     }
 
-    let timeout_seconds = body
-        .settings
+    let timeout_seconds = settings
         .request_timeout_seconds
         .clamp(MIN_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
-    let max_retries = body.settings.max_retries.min(MAX_RETRIES);
+    let max_retries = settings.max_retries.min(MAX_RETRIES);
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(timeout_seconds))
         .build()
@@ -179,7 +206,7 @@ pub(crate) async fn generate(
         })?;
     let request_body = serde_json::json!({
         "model": model,
-        "input": build_prompt(&body.project, &body.student),
+        "input": prompt,
         "store": false
     });
     let client_request_id = client_request_id();

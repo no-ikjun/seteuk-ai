@@ -1,4 +1,4 @@
-use crate::models::{Project, RecordType, SchoolLevel, Student};
+use crate::models::{Project, RecordType, ReviseRequest, SchoolLevel, Student};
 
 /* 2026학년도 학교생활기록부 기재요령(교육부훈령 제555호)에서 옮겨 온 규칙이다.
 항목과 학교급마다 요구하는 서술의 초점과 금지 사항이 달라서, 프롬프트를 한
@@ -121,6 +121,13 @@ fn extra_prohibitions(level: SchoolLevel, record: RecordType) -> &'static str {
     }
 }
 
+/* 나이스는 입력을 Byte로 세지만(한글 1자 = 3Byte) 모델에게 Byte를 말하면
+   가늠하지 못한다. 세는 단위는 Byte로 두고, 지시는 한글 자 수로 바꿔 준다.
+   내림으로 바꿔 환산 과정에서 한도를 넘지 않게 한다. */
+fn target_chars(target_bytes: i32) -> i32 {
+    (target_bytes / 3).max(1)
+}
+
 fn section(title: &str, body: &str) -> String {
     if body.trim().is_empty() {
         return String::new();
@@ -148,7 +155,7 @@ pub(super) fn build_prompt(project: &Project, student: &Student) -> String {
 - 단순 사실을 과장하거나 부풀려서 쓰지 말 것.
 - 활동의 단순 나열을 피하고 학생의 개별적 특성이 드러나게 쓸 것.
 - 학생 실명·학번 등 식별정보는 출력하지 말 것.
-- 평균 분량({avg_length}자)에 최대한 맞출 것(±20% 허용).
+- 분량은 한글 기준 {target_chars}자 안팎으로 쓰되 {target_chars}자를 넘기지 말 것.
 
 [영역/과목] {subject}
 [주제] {theme}
@@ -175,13 +182,58 @@ pub(super) fn build_prompt(project: &Project, student: &Student) -> String {
         level_note = section("학교급 단서", level_note(level, record)),
         common_prohibitions = COMMON_PROHIBITIONS,
         extra_prohibitions = extra_prohibitions(level, record),
-        avg_length = project.avg_length,
+        target_chars = target_chars(project.target_bytes),
         subject = project.subject,
         theme = project.theme,
         format = project.format,
         example = project.example,
         activity_text = student.activity_text,
         extra_keywords = student.extra_keywords,
+    )
+}
+
+/* 분량만 맞추는 재요청.
+   새로 쓰라고 하면 교사가 고쳐 둔 표현이 사라지고 기록에 없는 내용이 다시
+   섞일 수 있다. 그래서 '문장을 다시 쓰라'가 아니라 '있는 내용 안에서 분량만
+   맞추라'고 지시하고, 금지 사항은 그대로 다시 실어 준다. */
+pub(super) fn build_revise_prompt(body: &ReviseRequest) -> String {
+    let level = body.school_level;
+    let record = body.record_type;
+    let current = body.text.chars().count() as i32;
+    let direction = if current > body.target_chars {
+        "줄여서"
+    } else {
+        "늘려서"
+    };
+
+    format!(
+        r#"[역할] {level_name} 학교생활기록부 '{record_name}'에 쓸 아래 문장의 분량만 조정한다.
+
+[규칙]
+- 아래 [원문]에 없는 사실을 새로 만들어 내지 말 것.
+- 원문이 담은 내용과 판단을 그대로 유지할 것.
+- 문장을 {direction} 한글 기준 {target_chars}자 안팎으로 맞추되 {target_chars}자를 넘기지 말 것.
+- 늘리는 경우에도 같은 말을 반복하거나 빈 수식어를 덧붙이지 말 것.
+- 학생 실명·학번 등 식별정보는 출력하지 말 것.
+
+[기재 금지 사항 - 학교생활기록부 기재요령]
+{common_prohibitions}
+{extra_prohibitions}
+
+[원문]
+{text}
+
+[출력]
+- 조정한 문장만 출력
+- 머리말/해설/주의문구 없이 결과만
+"#,
+        level_name = level_name(level),
+        record_name = record_name(level, record),
+        direction = direction,
+        target_chars = body.target_chars.max(1),
+        common_prohibitions = COMMON_PROHIBITIONS,
+        extra_prohibitions = extra_prohibitions(level, record),
+        text = body.text,
     )
 }
 
@@ -198,9 +250,25 @@ mod tests {
     }
 
     #[test]
+    fn converts_the_byte_target_into_hangul_characters() {
+        let prompt = prompt_for(SchoolLevel::High, RecordType::Subject);
+        // 1,500Byte = 한글 500자
+        assert!(prompt.contains("한글 기준 500자"));
+        assert!(!prompt.contains("Byte"));
+    }
+
+    #[test]
+    fn rounds_the_target_down_so_it_never_exceeds_the_limit() {
+        assert_eq!(target_chars(1499), 499);
+        assert_eq!(target_chars(1500), 500);
+        assert_eq!(target_chars(900), 300);
+        // 0으로 나뉘어 '0자'를 지시하지 않는다.
+        assert_eq!(target_chars(1), 1);
+    }
+
+    #[test]
     fn keeps_project_and_student_values() {
         let prompt = prompt_for(SchoolLevel::High, RecordType::Subject);
-        assert!(prompt.contains("평균 분량(420자)"));
         assert!(prompt.contains("[영역/과목] 국어"));
         assert!(prompt.contains("발표: 근거를 제시함"));
         assert!(prompt.contains("질문이 많음"));

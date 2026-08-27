@@ -1,5 +1,8 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import type { GenerationRequest } from "../../domain/generation/Generation";
+import type {
+  GenerationRequest,
+  ReviseRequest,
+} from "../../domain/generation/Generation";
 import {
   GenerationError,
   toGenerationError,
@@ -19,6 +22,26 @@ export class TauriGenerationService implements GenerationService {
 
     try {
       return await invoke<{ text: string; attempts: number }>("generate", {
+        apiKey,
+        body: request,
+      });
+    } catch (error) {
+      throw toGenerationError(error);
+    }
+  }
+
+  async reviseLength(apiKey: string, request: ReviseRequest) {
+    if (!apiKey) throw new Error("OpenAI API Key가 필요합니다.");
+    if (!isTauri()) {
+      throw new GenerationError({
+        kind: "invalid_request",
+        message:
+          "분량 맞추기는 Tauri 데스크톱 앱에서만 사용할 수 있습니다.",
+      });
+    }
+
+    try {
+      return await invoke<{ text: string; attempts: number }>("revise_length", {
         apiKey,
         body: request,
       });

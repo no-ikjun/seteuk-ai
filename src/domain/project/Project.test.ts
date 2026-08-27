@@ -37,12 +37,12 @@ describe("missingProjectFields", () => {
   });
 
   it("목표 분량은 0보다 커야 한다", () => {
-    expect(missingProjectFields(project({ avgLength: 0 }))).toContain("avgLength");
-    expect(missingProjectFields(project({ avgLength: Number.NaN }))).toContain(
-      "avgLength",
+    expect(missingProjectFields(project({ targetBytes: 0 }))).toContain("targetBytes");
+    expect(missingProjectFields(project({ targetBytes: Number.NaN }))).toContain(
+      "targetBytes",
     );
-    expect(missingProjectFields(project({ avgLength: 1 }))).not.toContain(
-      "avgLength",
+    expect(missingProjectFields(project({ targetBytes: 1 }))).not.toContain(
+      "targetBytes",
     );
   });
 });

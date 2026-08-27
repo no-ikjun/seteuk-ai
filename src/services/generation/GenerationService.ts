@@ -1,10 +1,13 @@
 import type {
   GenerationRequest,
   GenerationResult,
+  ReviseRequest,
 } from "../../domain/generation/Generation";
 
 export interface GenerationService {
   generate(apiKey: string, request: GenerationRequest): Promise<GenerationResult>;
+  /* 분량만 맞추는 재요청. 생성과 같은 오류 형태를 쓴다. */
+  reviseLength(apiKey: string, request: ReviseRequest): Promise<GenerationResult>;
 }
 
 export type GenerationErrorKind =

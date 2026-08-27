@@ -6,7 +6,12 @@ import {
   type RecordType,
   type SchoolLevel,
 } from "../../domain/record/RecordSpec";
+import {
+  hangulCharsFor,
+  recordByteLimit,
+} from "../../domain/record/NeisBytes";
 import { SelectField } from "../../shared/forms/SelectField";
+import { AlertIcon } from "../../shared/icons";
 import { Field } from "./Field";
 
 type ProjectSettingsSectionProps = {
@@ -30,6 +35,7 @@ export function ProjectSettingsSection({
     (record) => record.value === project.recordType,
   );
   const subject = subjectField(project.recordType);
+  const limit = recordByteLimit(project.schoolLevel, project.recordType);
 
   return (
     <section className="settingsSection">
@@ -104,20 +110,36 @@ export function ProjectSettingsSection({
 
       <div className="fieldRow">
         <Field
-          label="목표 분량(자)"
-          hint="이 길이에 맞추도록 지시합니다. 결과 길이를 강제하지는 않습니다."
-          missing={missing.includes("avgLength")}
+          label="목표 분량(Byte)"
+          hint={
+            limit === null
+              ? `이 학교급의 이 항목에는 글자수 제한이 없습니다. 한글 약 ${hangulCharsFor(project.targetBytes)}자.`
+              : `나이스 한도 ${limit.toLocaleString()}Byte(한글 ${hangulCharsFor(limit)}자). 현재 목표는 한글 약 ${hangulCharsFor(project.targetBytes)}자.`
+          }
+          missing={missing.includes("targetBytes")}
         >
           <input
             className="input"
             type="number"
-            min={50}
-            step={10}
-            value={project.avgLength}
+            min={30}
+            step={30}
+            value={project.targetBytes}
             disabled={disabled}
-            onChange={(event) => onChange("avgLength", Number(event.target.value))}
+            onChange={(event) =>
+              onChange("targetBytes", Number(event.target.value))
+            }
           />
         </Field>
+
+        {limit !== null && project.targetBytes > limit && (
+          <p className="warn">
+            <AlertIcon />
+            <span>
+              목표가 나이스 한도({limit.toLocaleString()}Byte)를 넘습니다.
+              이대로 두면 결과를 나이스에 그대로 넣을 수 없습니다.
+            </span>
+          </p>
+        )}
       </div>
     </section>
   );

@@ -90,7 +90,7 @@ export function buildResultsWorkbook({
   const metadataRows = [
     { key: "subject", value: project.subject },
     { key: "theme", value: project.theme },
-    { key: "avgLength", value: String(project.avgLength) },
+    { key: "targetBytes", value: String(project.targetBytes) },
     { key: "format", value: project.format },
     { key: "example", value: project.example },
     { key: "sourceFile", value: fileName },

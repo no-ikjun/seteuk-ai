@@ -11,6 +11,7 @@ import {
   coerceRecordType,
   type SchoolLevel,
 } from "../domain/record/RecordSpec";
+import { defaultTargetBytes } from "../domain/record/NeisBytes";
 import type {
   ColumnMapping,
   StudentRecord,
@@ -140,6 +141,14 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         project.recordType = coerceRecordType(
           action.value as SchoolLevel,
           state.project.recordType,
+        );
+      }
+      /* 목표 분량은 항목마다 정해진 한도가 있다(세특 500자, 행특 300자).
+         항목을 바꾸면 이전 항목의 한도가 남아 있지 않도록 함께 옮긴다. */
+      if (action.field === "schoolLevel" || action.field === "recordType") {
+        project.targetBytes = defaultTargetBytes(
+          project.schoolLevel,
+          project.recordType,
         );
       }
       return { ...state, project };

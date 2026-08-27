@@ -2,7 +2,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::AppError,
-    models::{GenerationRequest, GenerationSettings, Project, RecordType, SchoolLevel, Student},
+    models::{
+        GenerationRequest, GenerationSettings, Project, RecordType, ReviseRequest, SchoolLevel,
+        Student,
+    },
     openai,
 };
 
@@ -73,7 +76,7 @@ struct ProjectDto {
     record_type: RecordTypeDto,
     subject: String,
     theme: String,
-    avg_length: i32,
+    target_bytes: i32,
     format: String,
     example: String,
 }
@@ -121,7 +124,7 @@ impl From<GenerateRequestDto> for GenerationRequest {
                 record_type: request.project.record_type.into(),
                 subject: request.project.subject,
                 theme: request.project.theme,
-                avg_length: request.project.avg_length,
+                target_bytes: request.project.target_bytes,
                 format: request.project.format,
                 example: request.project.example,
             },
@@ -136,6 +139,48 @@ impl From<GenerateRequestDto> for GenerationRequest {
             },
         }
     }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ReviseRequestDto {
+    settings: GenerationSettingsDto,
+    school_level: SchoolLevelDto,
+    record_type: RecordTypeDto,
+    text: String,
+    target_chars: i32,
+}
+
+impl From<ReviseRequestDto> for ReviseRequest {
+    fn from(request: ReviseRequestDto) -> Self {
+        Self {
+            settings: GenerationSettings {
+                model: request.settings.model,
+                request_timeout_seconds: request.settings.request_timeout_seconds,
+                max_retries: request.settings.max_retries,
+            },
+            school_level: request.school_level.into(),
+            record_type: request.record_type.into(),
+            text: request.text,
+            target_chars: request.target_chars,
+        }
+    }
+}
+
+/* 분량만 맞추는 재요청. 학생 활동 기록을 다시 보내지 않으므로 개인정보가
+   추가로 나가지 않는다. */
+#[tauri::command]
+pub(crate) async fn revise_length(
+    api_key: String,
+    body: ReviseRequestDto,
+) -> Result<GenerateResponseDto, GenerateErrorDto> {
+    let result = openai::client::revise_length(&api_key, &body.into())
+        .await
+        .map_err(GenerateErrorDto::from)?;
+    Ok(GenerateResponseDto {
+        text: result.text,
+        attempts: result.attempts,
+    })
 }
 
 #[tauri::command]

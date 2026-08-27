@@ -22,6 +22,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::generate::generate,
+            commands::generate::revise_length,
             commands::models::list_models
         ])
         .run(tauri::generate_context!())

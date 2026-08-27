@@ -20,7 +20,7 @@ const request: GenerationRequest = {
     recordType: "subject",
     subject: "국어",
     theme: "독서",
-    avgLength: 420,
+    targetBytes: 1500,
     format: "교사 관찰자 시점",
     example: "예시",
   },
@@ -41,6 +41,33 @@ describe("GenerationService", () => {
     invokeMock.mockReset();
     isTauriMock.mockReset();
     isTauriMock.mockReturnValue(true);
+  });
+
+  it("분량 맞추기는 학생 활동 기록 없이 문장만 보낸다", async () => {
+    invokeMock.mockResolvedValue({ text: "줄인 결과", attempts: 1 });
+
+    const result = await new TauriGenerationService().reviseLength("sk-test", {
+      settings: request.settings,
+      schoolLevel: "high",
+      recordType: "subject",
+      text: "원래 문장",
+      targetChars: 500,
+    });
+
+    expect(invokeMock).toHaveBeenCalledWith("revise_length", {
+      apiKey: "sk-test",
+      body: {
+        settings: request.settings,
+        schoolLevel: "high",
+        recordType: "subject",
+        text: "원래 문장",
+        targetChars: 500,
+      },
+    });
+    /* 활동 기록이 요청에 실리지 않아야 개인정보가 더 나가지 않는다. */
+    const [, body] = invokeMock.mock.calls[0];
+    expect(JSON.stringify(body)).not.toContain("activityText");
+    expect(result.text).toBe("줄인 결과");
   });
 
   it("Tauri Adapter가 invoke 세부 구현을 감싼다", async () => {
