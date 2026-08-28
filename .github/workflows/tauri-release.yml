@@ -96,19 +96,20 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Build NSIS and MSI installers
-        run: npm run tauri -- build --bundles nsis,msi
+      - name: Build NSIS installer
+        # MSI(WiX)는 한글 productName을 en-US 코드페이지로 인코딩하지 못해
+        # light.exe가 실패한다. Windows 배포는 NSIS 설치본만 제공한다.
+        run: npm run tauri -- build --bundles nsis
 
-      - name: Collect and checksum Windows installers
+      - name: Collect and checksum Windows installer
         shell: pwsh
         run: |
           $bundleRoot = Join-Path $PWD "src-tauri/target/release/bundle"
           $installers = @(
             Get-ChildItem (Join-Path $bundleRoot "nsis") -Filter *.exe -File -ErrorAction SilentlyContinue
-            Get-ChildItem (Join-Path $bundleRoot "msi") -Filter *.msi -File -ErrorAction SilentlyContinue
           )
-          if ($installers.Count -ne 2) {
-            throw "Expected one NSIS installer and one MSI installer, found $($installers.Count)."
+          if ($installers.Count -ne 1) {
+            throw "Expected one NSIS installer, found $($installers.Count)."
           }
 
           $assetDir = Join-Path $env:RUNNER_TEMP "windows-assets"
@@ -351,11 +352,10 @@ jobs:
           shopt -s nullglob
           dmg=(release-assets/*.dmg)
           exe=(release-assets/*.exe)
-          msi=(release-assets/*.msi)
           checksums=(release-assets/*.sha256)
 
-          if (( ${#dmg[@]} != 1 || ${#exe[@]} != 1 || ${#msi[@]} != 1 || ${#checksums[@]} != 3 )); then
-            echo "Expected one DMG, one EXE, one MSI, and three checksum files." >&2
+          if (( ${#dmg[@]} != 1 || ${#exe[@]} != 1 || ${#checksums[@]} != 2 )); then
+            echo "Expected one DMG, one EXE, and two checksum files." >&2
             find release-assets -maxdepth 1 -type f -print >&2
             exit 1
           fi
